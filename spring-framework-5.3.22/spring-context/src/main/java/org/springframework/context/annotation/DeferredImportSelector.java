@@ -48,7 +48,6 @@ public interface DeferredImportSelector extends ImportSelector {
 		return null;
 	}
 
-
 	/**
 	 * Interface used to group results from different import selectors.
 	 * @since 5.0
@@ -66,7 +65,6 @@ public interface DeferredImportSelector extends ImportSelector {
 		 * for this group.
 		 */
 		Iterable<Entry> selectImports();
-
 
 		/**
 		 * An entry that holds the {@link AnnotationMetadata} of the importing
@@ -100,12 +98,8 @@ public interface DeferredImportSelector extends ImportSelector {
 
 			@Override
 			public boolean equals(@Nullable Object other) {
-				if (this == other) {
-					return true;
-				}
-				if (other == null || getClass() != other.getClass()) {
-					return false;
-				}
+				if (this == other) { return true; }
+				if (other == null || getClass() != other.getClass()) { return false; }
 				Entry entry = (Entry) other;
 				return (this.metadata.equals(entry.metadata) && this.importClassName.equals(entry.importClassName));
 			}
