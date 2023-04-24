@@ -212,7 +212,7 @@ class ConfigurationClassParser {
 	}
 
 	protected void processConfigurationClass(ConfigurationClass configClass, Predicate<String> filter) throws IOException {
-		//是否需要跳过
+		//在这里首先看配置类上是否有Conditional注解，如果有的话，就去解析处理，看看是否要跳过这个注解类
 		if (this.conditionEvaluator.shouldSkip(configClass.getMetadata(), ConfigurationPhase.PARSE_CONFIGURATION)) { return; }
 		//todo：所有解析出来的配置类都要放置到configurationClasses中,key是当前解析出来的配置类,value就是表示这个配置类是通过谁来导入的。
 		// 如果这个配置类不是通过别的类来导入的，这时key和value就是一样的。
