@@ -1681,13 +1681,19 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 				return null;
 			}, getAccessControlContext());
 		} else {
+			/**todo：Aware接口从字面上翻译过来是感知捕获的含义。
+			 *  单纯的bean（未实现Aware系列接口）是没有知觉的；
+			 *  实现了Aware系列接口的bean可以访问Spring容器。
+			 *  这些Aware系列接口增强了Spring bean的功能，
+			 *  但是也会造成对Spring框架的绑定，增大了与Spring框架的耦合度*/
 			//如果bean实现了 BeanNameAware、BeanClassLoaderAware 或 BeanFactoryAware 接口，回调
 			invokeAwareMethods(beanName, bean);
 		}
 
 		Object wrappedBean = bean;
 		if (mbd == null || !mbd.isSynthetic()) {
-			//BeanPostProcessor的postProcessBeforeInitialization 回调
+			//BeanPostProcessor的postProcessBeforeInitialization 回调，在invokeAwareMethods方法中只有BeanNameAware、BeanClassLoaderAware 或 BeanFactoryAware
+			// 这三个Aware的设置，那么剩下的就在一下的方法中了
 			wrappedBean = applyBeanPostProcessorsBeforeInitialization(wrappedBean, beanName);
 		}
 
@@ -1706,6 +1712,8 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		return wrappedBean;
 	}
 
+	/**springboot启动的时候，Bean创建的时候有一个方法initializeBean（处理回调），在这个方法中
+	 * 如果 bean 实现了 BeanNameAware、BeanClassLoaderAware 或 BeanFactoryAware 接口，回调*/
 	private void invokeAwareMethods(String beanName, Object bean) {
 		if (bean instanceof Aware) {
 			if (bean instanceof BeanNameAware) {

@@ -76,6 +76,14 @@ class ApplicationContextAwareProcessor implements BeanPostProcessor {
 	}
 
 
+	/**
+	 * BeanPostProcessor 是在spring容器实例化bean之后，在执行bean的初始化方法前后，添加一些自己的处理逻辑。
+	 * 其中有一个BeanPostProcessor的子类是ApplicationContextAwareProcessor。它的postProcessBeforeInitialization方法里面就是去设置Aware的值
+	 * @param bean the new bean instance
+	 * @param beanName the name of the bean
+	 * @return
+	 * @throws BeansException
+	 */
 	@Override
 	@Nullable
 	public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
