@@ -47,6 +47,13 @@ import org.springframework.lang.Nullable;
  * @see org.springframework.web.servlet.mvc.SimpleControllerHandlerAdapter
  * @see org.springframework.web.servlet.handler.SimpleServletHandlerAdapter
  */
+
+/**
+ * todo：为什么我们添加了注解，例如@PathVariable，从而SpringMVC就能够将这些变量确定为对应的值，
+ *  这就是HandlerAdapter（执行链适配器）的作用，我们在DispatcherServlet#doDispatch()的方法中
+ *  通过getHandler方法确定好控制器和对应的方法后（执行链），getHandlerAdapter()就能帮我们为当前的
+ *  handler找到一个Adapter（适配器），从而我们通过该适配器，就能够将请求的链接所带的参数给适配上
+ */
 public interface HandlerAdapter {
 
 	/**

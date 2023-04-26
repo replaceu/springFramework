@@ -48,14 +48,12 @@ public class InvocableHandlerMethod extends HandlerMethod {
 
 	private static final Object[] EMPTY_ARGS = new Object[0];
 
-
 	private HandlerMethodArgumentResolverComposite resolvers = new HandlerMethodArgumentResolverComposite();
 
 	private ParameterNameDiscoverer parameterNameDiscoverer = new DefaultParameterNameDiscoverer();
 
 	@Nullable
 	private WebDataBinderFactory dataBinderFactory;
-
 
 	/**
 	 * Create an instance from a {@code HandlerMethod}.
@@ -87,12 +85,10 @@ public class InvocableHandlerMethod extends HandlerMethod {
 	 * @param parameterTypes the method parameter types
 	 * @throws NoSuchMethodException when the method cannot be found
 	 */
-	public InvocableHandlerMethod(Object bean, String methodName, Class<?>... parameterTypes)
-			throws NoSuchMethodException {
+	public InvocableHandlerMethod(Object bean, String methodName, Class<?>... parameterTypes) throws NoSuchMethodException {
 
 		super(bean, methodName, parameterTypes);
 	}
-
 
 	/**
 	 * Set {@link HandlerMethodArgumentResolver HandlerMethodArgumentResolvers}
@@ -119,7 +115,6 @@ public class InvocableHandlerMethod extends HandlerMethod {
 		this.dataBinderFactory = dataBinderFactory;
 	}
 
-
 	/**
 	 * Invoke the method after resolving its argument values in the context of the given request.
 	 * <p>Argument values are commonly resolved through
@@ -139,14 +134,16 @@ public class InvocableHandlerMethod extends HandlerMethod {
 	 * @see #getMethodArgumentValues
 	 * @see #doInvoke
 	 */
+	//处理请求
 	@Nullable
-	public Object invokeForRequest(NativeWebRequest request, @Nullable ModelAndViewContainer mavContainer,
-			Object... providedArgs) throws Exception {
+	public Object invokeForRequest(NativeWebRequest request, @Nullable ModelAndViewContainer mavContainer, Object... providedArgs) throws Exception {
 
+		//获取执行HandlerMethod方法需要的参数，也就是请求中包含的需要处理的数据
 		Object[] args = getMethodArgumentValues(request, mavContainer, providedArgs);
 		if (logger.isTraceEnabled()) {
 			logger.trace("Arguments: " + Arrays.toString(args));
 		}
+		//使用给定的参数值调用处理程序方法
 		return doInvoke(args);
 	}
 
@@ -156,13 +153,10 @@ public class InvocableHandlerMethod extends HandlerMethod {
 	 * <p>The resulting array will be passed into {@link #doInvoke}.
 	 * @since 5.1.2
 	 */
-	protected Object[] getMethodArgumentValues(NativeWebRequest request, @Nullable ModelAndViewContainer mavContainer,
-			Object... providedArgs) throws Exception {
+	protected Object[] getMethodArgumentValues(NativeWebRequest request, @Nullable ModelAndViewContainer mavContainer, Object... providedArgs) throws Exception {
 
 		MethodParameter[] parameters = getMethodParameters();
-		if (ObjectUtils.isEmpty(parameters)) {
-			return EMPTY_ARGS;
-		}
+		if (ObjectUtils.isEmpty(parameters)) { return EMPTY_ARGS; }
 
 		Object[] args = new Object[parameters.length];
 		for (int i = 0; i < parameters.length; i++) {
@@ -172,13 +166,10 @@ public class InvocableHandlerMethod extends HandlerMethod {
 			if (args[i] != null) {
 				continue;
 			}
-			if (!this.resolvers.supportsParameter(parameter)) {
-				throw new IllegalStateException(formatArgumentError(parameter, "No suitable resolver"));
-			}
+			if (!this.resolvers.supportsParameter(parameter)) { throw new IllegalStateException(formatArgumentError(parameter, "No suitable resolver")); }
 			try {
 				args[i] = this.resolvers.resolveArgument(parameter, mavContainer, request, this.dataBinderFactory);
-			}
-			catch (Exception ex) {
+			} catch (Exception ex) {
 				// Leave stack trace for later, exception may actually be resolved and handled...
 				if (logger.isDebugEnabled()) {
 					String exMsg = ex.getMessage();
@@ -199,29 +190,33 @@ public class InvocableHandlerMethod extends HandlerMethod {
 	protected Object doInvoke(Object... args) throws Exception {
 		Method method = getBridgedMethod();
 		try {
-			if (KotlinDetector.isSuspendingFunction(method)) {
-				return CoroutinesUtils.invokeSuspendingFunction(method, getBean(), args);
-			}
+			if (KotlinDetector.isSuspendingFunction(method)) { return CoroutinesUtils.invokeSuspendingFunction(method, getBean(), args); }
+			/**
+			 *  获取桥接方法实例, 并执行该方法
+			 *  执行Control类中编写的方法
+			 * 1.这里就是获取到HandlerMethod实例中维护的我们编写的处理方法, 然后通过反射去执行该方法对象, 注意这里获取的是桥接方法
+			 *
+			 * 2.在invoke()方法中有一个getBean()的方法, 这个是因为我们在执行Method时需要传递一个该方法所属类的实例对象;
+			 * Spring在解析Controller类时会实例化一个对象,这里的getBean获取的就是这个对象;在SpringMVC初始化时,会获取该实例对象,
+			 * 然后遍历该实例的所有方法,将该方法和该Controller对象封装到HandlerMethod实例中,然后注册到mappingLookup这个容器中;
+			 *
+			 * 3. getBridgedMethod().invoke(getBean(), args)实际上执行的是我们编写的处理器方法
+			 */
 			return method.invoke(getBean(), args);
-		}
-		catch (IllegalArgumentException ex) {
+		} catch (IllegalArgumentException ex) {
 			assertTargetBean(method, getBean(), args);
 			String text = (ex.getMessage() != null ? ex.getMessage() : "Illegal argument");
 			throw new IllegalStateException(formatInvokeError(text, args), ex);
-		}
-		catch (InvocationTargetException ex) {
+		} catch (InvocationTargetException ex) {
 			// Unwrap for HandlerExceptionResolvers ...
 			Throwable targetException = ex.getTargetException();
 			if (targetException instanceof RuntimeException) {
 				throw (RuntimeException) targetException;
-			}
-			else if (targetException instanceof Error) {
+			} else if (targetException instanceof Error) {
 				throw (Error) targetException;
-			}
-			else if (targetException instanceof Exception) {
+			} else if (targetException instanceof Exception) {
 				throw (Exception) targetException;
-			}
-			else {
+			} else {
 				throw new IllegalStateException(formatInvokeError("Invocation failure", args), targetException);
 			}
 		}
