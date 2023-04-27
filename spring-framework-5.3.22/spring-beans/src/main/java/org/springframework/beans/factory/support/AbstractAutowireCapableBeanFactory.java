@@ -558,7 +558,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 			instanceWrapper = this.factoryBeanInstanceCache.remove(beanName);
 		}
 		if (instanceWrapper == null) {
-			//todo：创建bean的时候，这里创建bean的实例有三种方法
+			//todo：创建bean的时候，实例化对象，这里创建bean的实例有三种方法
 			// 1.工厂方法创建
 			// 2.构造方法的方式注入
 			// 3.无参构造方法注入
@@ -586,7 +586,8 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 
 		// Eagerly cache singletons to be able to resolve circular references
 		// even when triggered by lifecycle interfaces like BeanFactoryAware.
-		/** earlySingletonExposure 是一个重要的变量，用于解决循环依赖，该变量表示是否提前暴露，
+		/**
+		 * earlySingletonExposure 是一个重要的变量，用于解决循环依赖，该变量表示是否提前暴露，如果允许，则直接添加一个ObjectFactory到三级缓存
 		 * 向容器中缓存单例模式的Bean对象，以防循环引用
 		 * 判断是否是早期引用的bean，如果是，则允许其提前暴露引用
 		 * 这里判断的逻辑主要有三个：
@@ -599,6 +600,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 				logger.trace("Eagerly caching bean '" + beanName + "' to allow for resolving potential circular references");
 			}
 			//添加工厂对象到singletonFactories缓存中，getEarlyBeanReference（）获取早期 bean 的引用，如果 bean 中的方法被AOP切点所匹配到，此时AOP相关逻辑会介入
+			//todo：添加三级缓存
 			addSingletonFactory(beanName, () -> getEarlyBeanReference(beanName, mbd, bean));
 		}
 
@@ -938,6 +940,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		Object exposedObject = bean;
 		if (!mbd.isSynthetic() && hasInstantiationAwareBeanPostProcessors()) {
 			for (SmartInstantiationAwareBeanPostProcessor bp : getBeanPostProcessorCache().smartInstantiationAware) {
+				//如果需要代理，这里会返回代理对象；否则返回原始对象
 				exposedObject = bp.getEarlyBeanReference(exposedObject, beanName);
 			}
 		}

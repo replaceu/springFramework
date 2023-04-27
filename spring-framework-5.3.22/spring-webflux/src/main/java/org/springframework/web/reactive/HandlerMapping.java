@@ -28,6 +28,11 @@ import org.springframework.web.server.ServerWebExchange;
  * @author Sebastien Deleuze
  * @since 5.0
  */
+
+/**处理器的映射器
+ * HandlerMapping是用来查找Handler的，具体表现形式可以是类，也可以是方法
+ * ⽐如，标注了@RequestMapping的每个⽅法都可以看成是⼀个Handler。
+ * Handler负责具 体实际的请求处理，在请求到达后，HandlerMapping 的作⽤便是找到请求相应的处理器Handler和 Interceptor.*/
 public interface HandlerMapping {
 
 	/**
