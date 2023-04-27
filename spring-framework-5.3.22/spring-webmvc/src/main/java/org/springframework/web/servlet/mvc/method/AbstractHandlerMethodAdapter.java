@@ -37,12 +37,10 @@ public abstract class AbstractHandlerMethodAdapter extends WebContentGenerator i
 
 	private int order = Ordered.LOWEST_PRECEDENCE;
 
-
 	public AbstractHandlerMethodAdapter() {
 		// no restriction of HTTP methods by default
 		super(false);
 	}
-
 
 	/**
 	 * Specify the order value for this HandlerAdapter bean.
@@ -57,7 +55,6 @@ public abstract class AbstractHandlerMethodAdapter extends WebContentGenerator i
 	public int getOrder() {
 		return this.order;
 	}
-
 
 	/**
 	 * This implementation expects the handler to be an {@link HandlerMethod}.
@@ -81,8 +78,7 @@ public abstract class AbstractHandlerMethodAdapter extends WebContentGenerator i
 	 */
 	@Override
 	@Nullable
-	public final ModelAndView handle(HttpServletRequest request, HttpServletResponse response, Object handler)
-			throws Exception {
+	public final ModelAndView handle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
 
 		return handleInternal(request, response, (HandlerMethod) handler);
 	}
@@ -98,8 +94,7 @@ public abstract class AbstractHandlerMethodAdapter extends WebContentGenerator i
 	 * @throws Exception in case of errors
 	 */
 	@Nullable
-	protected abstract ModelAndView handleInternal(HttpServletRequest request,
-			HttpServletResponse response, HandlerMethod handlerMethod) throws Exception;
+	protected abstract ModelAndView handleInternal(HttpServletRequest request, HttpServletResponse response, HandlerMethod handlerMethod) throws Exception;
 
 	/**
 	 * This implementation expects the handler to be an {@link HandlerMethod}.

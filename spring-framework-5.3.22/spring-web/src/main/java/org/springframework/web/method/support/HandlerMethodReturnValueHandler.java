@@ -28,6 +28,8 @@ import org.springframework.web.context.request.NativeWebRequest;
  * @since 3.1
  * @see HandlerMethodArgumentResolver
  */
+
+//返回值处理器，默认15种
 public interface HandlerMethodReturnValueHandler {
 
 	/**

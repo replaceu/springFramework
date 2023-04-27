@@ -39,6 +39,7 @@ public interface HandlerMethodArgumentResolver {
 	 * @return {@code true} if this resolver supports the supplied parameter;
 	 * {@code false} otherwise
 	 */
+	/**解析器是否支持当前参数 *@param var1 需要被解析的Controller参数 * @return */
 	boolean supportsParameter(MethodParameter parameter);
 
 	/**
@@ -56,8 +57,17 @@ public interface HandlerMethodArgumentResolver {
 	 * @return the resolved argument value, or {@code null} if not resolvable
 	 * @throws Exception in case of errors with the preparation of argument values
 	 */
+	/**
+	 * 当前解析器是否支持解析这种参数，支持就调用 resolveArgument解析最终确定将要执行的目标方法的每一个参数的值是什么
+	 * SpringMVC目标方法能写多少种参数类型。取决于参数解析器，默认26种
+	 * @param parameter
+	 * @param mavContainer
+	 * @param webRequest
+	 * @param binderFactory
+	 * @return
+	 * @throws Exception
+	 */
 	@Nullable
-	Object resolveArgument(MethodParameter parameter, @Nullable ModelAndViewContainer mavContainer,
-			NativeWebRequest webRequest, @Nullable WebDataBinderFactory binderFactory) throws Exception;
+	Object resolveArgument(MethodParameter parameter, @Nullable ModelAndViewContainer mavContainer, NativeWebRequest webRequest, @Nullable WebDataBinderFactory binderFactory) throws Exception;
 
 }
