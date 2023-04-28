@@ -37,6 +37,7 @@ public interface ConditionContext {
 	 * @throws IllegalStateException if no registry is available (which is unusual:
 	 * only the case with a plain {@link ClassPathScanningCandidateComponentProvider})
 	 */
+	//返回BeanDefinitionRegistry注册表，可以检查Bean的定义
 	BeanDefinitionRegistry getRegistry();
 
 	/**
@@ -44,17 +45,20 @@ public interface ConditionContext {
 	 * definition should the condition match, or {@code null} if the bean factory is
 	 * not available (or not downcastable to {@code ConfigurableListableBeanFactory}).
 	 */
+	//返回ConfigurableListableBeanFactory，可以检查Bean是否已经存在，进一步检查Bean属性
 	@Nullable
 	ConfigurableListableBeanFactory getBeanFactory();
 
 	/**
 	 * Return the {@link Environment} for which the current application is running.
 	 */
+	//返回 Environment,可以获得 当前应用环境变量，检测当前环境变量是否存在
 	Environment getEnvironment();
 
 	/**
 	 * Return the {@link ResourceLoader} currently being used.
 	 */
+	//返回ResourceLoader,用于读取或检查所加载的资源
 	ResourceLoader getResourceLoader();
 
 	/**
@@ -62,6 +66,7 @@ public interface ConditionContext {
 	 * (only {@code null} if even the system ClassLoader isn't accessible).
 	 * @see org.springframework.util.ClassUtils#forName(String, ClassLoader)
 	 */
+	//返回 ClassLoader,用于检查类是否存在
 	@Nullable
 	ClassLoader getClassLoader();
 
