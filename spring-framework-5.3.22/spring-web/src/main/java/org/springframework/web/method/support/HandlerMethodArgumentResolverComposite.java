@@ -38,11 +38,11 @@ import org.springframework.web.context.request.NativeWebRequest;
  */
 public class HandlerMethodArgumentResolverComposite implements HandlerMethodArgumentResolver {
 
+	//它的元素在RequestMappingHandlerAdapter类的afterPropertiesSet方法中被添加，存放的是SpringMVC一些默认的HandlerMethodArgumentResolver参数解析器
 	private final List<HandlerMethodArgumentResolver> argumentResolvers = new ArrayList<>();
 
-	private final Map<MethodParameter, HandlerMethodArgumentResolver> argumentResolverCache =
-			new ConcurrentHashMap<>(256);
-
+	//存放已经解析过的参数，已经对应的HandlerMethodArgumentResolver解析器。加快查找过程
+	private final Map<MethodParameter, HandlerMethodArgumentResolver> argumentResolverCache = new ConcurrentHashMap<>(256);
 
 	/**
 	 * Add the given {@link HandlerMethodArgumentResolver}.
@@ -56,8 +56,7 @@ public class HandlerMethodArgumentResolverComposite implements HandlerMethodArgu
 	 * Add the given {@link HandlerMethodArgumentResolver HandlerMethodArgumentResolvers}.
 	 * @since 4.3
 	 */
-	public HandlerMethodArgumentResolverComposite addResolvers(
-			@Nullable HandlerMethodArgumentResolver... resolvers) {
+	public HandlerMethodArgumentResolverComposite addResolvers(@Nullable HandlerMethodArgumentResolver... resolvers) {
 
 		if (resolvers != null) {
 			Collections.addAll(this.argumentResolvers, resolvers);
@@ -68,8 +67,7 @@ public class HandlerMethodArgumentResolverComposite implements HandlerMethodArgu
 	/**
 	 * Add the given {@link HandlerMethodArgumentResolver HandlerMethodArgumentResolvers}.
 	 */
-	public HandlerMethodArgumentResolverComposite addResolvers(
-			@Nullable List<? extends HandlerMethodArgumentResolver> resolvers) {
+	public HandlerMethodArgumentResolverComposite addResolvers(@Nullable List<? extends HandlerMethodArgumentResolver> resolvers) {
 
 		if (resolvers != null) {
 			this.argumentResolvers.addAll(resolvers);
@@ -93,7 +91,6 @@ public class HandlerMethodArgumentResolverComposite implements HandlerMethodArgu
 		this.argumentResolverCache.clear();
 	}
 
-
 	/**
 	 * Whether the given {@linkplain MethodParameter method parameter} is
 	 * supported by any registered {@link HandlerMethodArgumentResolver}.
@@ -111,14 +108,10 @@ public class HandlerMethodArgumentResolverComposite implements HandlerMethodArgu
 	 */
 	@Override
 	@Nullable
-	public Object resolveArgument(MethodParameter parameter, @Nullable ModelAndViewContainer mavContainer,
-			NativeWebRequest webRequest, @Nullable WebDataBinderFactory binderFactory) throws Exception {
+	public Object resolveArgument(MethodParameter parameter, @Nullable ModelAndViewContainer mavContainer, NativeWebRequest webRequest, @Nullable WebDataBinderFactory binderFactory) throws Exception {
 
 		HandlerMethodArgumentResolver resolver = getArgumentResolver(parameter);
-		if (resolver == null) {
-			throw new IllegalArgumentException("Unsupported parameter type [" +
-					parameter.getParameterType().getName() + "]. supportsParameter should be called first.");
-		}
+		if (resolver == null) { throw new IllegalArgumentException("Unsupported parameter type [" + parameter.getParameterType().getName() + "]. supportsParameter should be called first."); }
 		return resolver.resolveArgument(parameter, mavContainer, webRequest, binderFactory);
 	}
 

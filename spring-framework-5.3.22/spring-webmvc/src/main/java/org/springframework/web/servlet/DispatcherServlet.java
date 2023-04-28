@@ -1034,10 +1034,11 @@ public class DispatcherServlet extends FrameworkServlet {
 	 */
 	@SuppressWarnings("deprecation")
 	protected void doDispatch(HttpServletRequest request, HttpServletResponse response) throws Exception {
+		//此处用processedRequest需要注意的是：若是处理上传，processedRequest 将和request不再指向同一对象
 		HttpServletRequest processedRequest = request;
 		HandlerExecutionChain mappedHandler = null;
 		boolean multipartRequestParsed = false;
-		//创建异步管理器，用以处理异步执行请求
+		//创建异步管理器，用以处理异步执行请求,什么时候要用到异步处理呢？就是业务逻辑复杂（或者其他原因），为了避免请求线程阻塞，需要委托给另一个线程的时候
 		WebAsyncManager asyncManager = WebAsyncUtils.getAsyncManager(request);
 
 		try {
@@ -1046,7 +1047,9 @@ public class DispatcherServlet extends FrameworkServlet {
 
 			try {
 				//调用multipartResolver文件上传解析器的isMultipart方法来判断当前请求是否是文件上传请求
+				//如果请求是POST请求，并且请求头中的Context-Type是以multipart/开头的就认为是文件上传的请求
 				processedRequest = checkMultipart(request);
+				//标记一下，是否是文件上传的request
 				multipartRequestParsed = (processedRequest != request);
 
 				// Determine handler for the current request.
@@ -1064,12 +1067,17 @@ public class DispatcherServlet extends FrameworkServlet {
 				 *  判断该责任链是不是HandlerMethod的实例，如果是就能得到适配器，所谓的getHandlerAdapter就是
 				 *  判断instance of。
 				 */
+				//获取适配器，一般都是返回RequestMappingHandlerAdapter(用于处理@RequestMapping注解的方法)
 				HandlerAdapter ha = getHandlerAdapter(mappedHandler.getHandler());
 
 				// Process last-modified header, if supported by the handler.
+				//如果是GET请求，如果内容没有变化的话，则直接返回
 				String method = request.getMethod();
 				boolean isGet = HttpMethod.GET.matches(method);
 				if (isGet || HttpMethod.HEAD.matches(method)) {
+					//在客户端地一次输入URL时，服务器端会返回内容和状态码200， 表示请求成功，同时会添加一个“Last-Modified”属性，表示该请求资源的最后修改时间
+					//客户端第二次请求此URL时，客户端会向服务器发送请求头 “IF-Modified-Since”，
+					//如果服务端内容没有变化，则自动返回HTTP304状态码（只返回相应头信息，不返回资源文件内容，这样就可以节省网络带宽，提供响应速度和用户体验）
 					long lastModified = ha.getLastModified(request, mappedHandler.getHandler());
 					if (new ServletWebRequest(request, response).checkNotModified(lastModified) && isGet) { return; }
 				}
@@ -1082,10 +1090,17 @@ public class DispatcherServlet extends FrameworkServlet {
 				 * 适配器调用handle方法来处理我们的目标参数
 				 *  ha.handle(请求，返回，执行链)
 				 */
+				// 真正执行我们自己书写的controller方法的逻辑。返回一个ModelAndView
+				// 这也是一个很复杂的过程（序列化、数据绑定等等），需要后面专题讲解
+				// 这里一般最后都是由RequestMappingHandlerAdapter的invocableMethod.invokeHandle执行
+				// 参数解析和返回值处理都在这个方法执行
+				// 如果是@ResponseBody的方法，那么mv=null
 				mv = ha.handle(processedRequest, response, mappedHandler.getHandler());
 
+				// 如果异步启动了，这里就先直接返回了，也就不会再执行拦截器PostHandle之类的
 				if (asyncManager.isConcurrentHandlingStarted()) { return; }
 
+				//意思是：如果我们没有设置viewName，就采用默认的。否则采用我们自己的
 				applyDefaultViewName(processedRequest, mv);
 				mappedHandler.applyPostHandle(processedRequest, response, mv);
 			} catch (Exception ex) {
@@ -1095,6 +1110,9 @@ public class DispatcherServlet extends FrameworkServlet {
 				// making them available for @ExceptionHandler methods and other scenarios.
 				dispatchException = new NestedServletException("Handler dispatch failed", err);
 			}
+			//处理视图
+			//这个方法很重要，顾名思义，他是来处理结果的，渲染视图、处理异常等等的
+			//如果是@ResponseBody，那么这个方法里面的逻辑除了拦截器的逻辑，其他都不会执行
 			processDispatchResult(processedRequest, response, mappedHandler, mv, dispatchException);
 		} catch (Exception ex) {
 			triggerAfterCompletion(processedRequest, response, mappedHandler, ex);
@@ -1256,9 +1274,12 @@ public class DispatcherServlet extends FrameworkServlet {
 	 */
 	@Nullable
 	protected HandlerExecutionChain getHandler(HttpServletRequest request) throws Exception {
+		//委托给HandlerMapping实现，寻找的过程就是遍历所有的HandlerMapping进行查找
 		if (this.handlerMappings != null) {
 			for (HandlerMapping mapping : this.handlerMappings) {
 				HandlerExecutionChain handler = mapping.getHandler(request);
+				//如果找到了，就立即返回了，不再进行遍历，所以有优先级的概念，
+				// 在AnnotationDrivenBeanDefinitionParser中RequestMappingHandlerMapping中order为0，拥有最高的优先级
 				if (handler != null) { return handler; }
 			}
 		}
@@ -1292,6 +1313,7 @@ public class DispatcherServlet extends FrameworkServlet {
 	protected HandlerAdapter getHandlerAdapter(Object handler) throws ServletException {
 		if (this.handlerAdapters != null) {
 			for (HandlerAdapter adapter : this.handlerAdapters) {
+				//如果适配器支持了执行链，就直接返回了
 				if (adapter.supports(handler)) { return adapter; }
 			}
 		}

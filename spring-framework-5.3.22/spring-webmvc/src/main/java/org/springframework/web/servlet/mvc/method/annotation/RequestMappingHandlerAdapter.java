@@ -557,14 +557,17 @@ public class RequestMappingHandlerAdapter extends AbstractHandlerMethodAdapter i
 		initControllerAdviceCache();
 
 		if (this.argumentResolvers == null) {
+			//初始化SpringMVC默认的方法参数解析器，并添加至argumentResolvers（HandlerMethodArgumentResolverComposite）
 			List<HandlerMethodArgumentResolver> resolvers = getDefaultArgumentResolvers();
 			this.argumentResolvers = new HandlerMethodArgumentResolverComposite().addResolvers(resolvers);
 		}
 		if (this.initBinderArgumentResolvers == null) {
+			//初始化SpringMVC默认的初始化绑定器(@InitBinder)参数解析器，并添加至initBinderArgumentResolvers（HandlerMethodArgumentResolverComposite）
 			List<HandlerMethodArgumentResolver> resolvers = getDefaultInitBinderArgumentResolvers();
 			this.initBinderArgumentResolvers = new HandlerMethodArgumentResolverComposite().addResolvers(resolvers);
 		}
 		if (this.returnValueHandlers == null) {
+			//获取默认的方法返回值解析器
 			List<HandlerMethodReturnValueHandler> handlers = getDefaultReturnValueHandlers();
 			this.returnValueHandlers = new HandlerMethodReturnValueHandlerComposite().addHandlers(handlers);
 		}
@@ -621,13 +624,20 @@ public class RequestMappingHandlerAdapter extends AbstractHandlerMethodAdapter i
 	 * Return the list of argument resolvers to use including built-in resolvers
 	 * and custom resolvers provided via {@link #setCustomArgumentResolvers}.
 	 */
+	//默认的参数解析，创建了默认的24个参数解析器，并添加至resolvers
+	//这里的24个参数解析器都是针对不同的参数类型来解析的
 	private List<HandlerMethodArgumentResolver> getDefaultArgumentResolvers() {
 		List<HandlerMethodArgumentResolver> resolvers = new ArrayList<>(30);
 
 		// Annotation-based argument resolution
+		//基于注解的参数解析器
+		//一般用于带有@RequestParam注解的简单参数绑定，简单参数比如byte、int、long、double、String以及对应的包装类型
 		resolvers.add(new RequestParamMethodArgumentResolver(getBeanFactory(), false));
+		//用于处理带有@RequestParam注解，且参数类型为Map的解析绑定
 		resolvers.add(new RequestParamMapMethodArgumentResolver());
+		//一般用于处理带有@PathVariable注解的默认参数绑定
 		resolvers.add(new PathVariableMethodArgumentResolver());
+		//也是用于带有@PathVariable注解的Map相关参数绑定
 		resolvers.add(new PathVariableMapMethodArgumentResolver());
 		resolvers.add(new MatrixVariableMethodArgumentResolver());
 		resolvers.add(new MatrixVariableMapMethodArgumentResolver());
@@ -642,6 +652,7 @@ public class RequestMappingHandlerAdapter extends AbstractHandlerMethodAdapter i
 		resolvers.add(new RequestAttributeMethodArgumentResolver());
 
 		// Type-based argument resolution
+		// 基于类型的参数解析器
 		resolvers.add(new ServletRequestMethodArgumentResolver());
 		resolvers.add(new ServletResponseMethodArgumentResolver());
 		resolvers.add(new HttpEntityMethodProcessor(getMessageConverters(), this.requestResponseBodyAdvice));
@@ -752,6 +763,10 @@ public class RequestMappingHandlerAdapter extends AbstractHandlerMethodAdapter i
 	 * not recognized by any HandlerMethodReturnValueHandler will be interpreted
 	 * as a model attribute.
 	 */
+
+	//总是返回true ，因为任何方法参数和返回值类型会以某种方式加以处理。
+	//不被任何HandlerMethodArgumentResolver识别的方法参数被解释为一个请求参数，如果它是一个简单的类型，或者作为模型属性否则。
+	//没有任何HandlerMethodReturnValueHandler识别的返回值将被解释为一个模型属性
 	@Override
 	protected boolean supportsInternal(HandlerMethod handlerMethod) {
 		return true;
@@ -834,8 +849,8 @@ public class RequestMappingHandlerAdapter extends AbstractHandlerMethodAdapter i
 			WebDataBinderFactory binderFactory = getDataBinderFactory(handlerMethod);
 			ModelFactory modelFactory = getModelFactory(handlerMethod, binderFactory);
 			/**
-			 * 创建InvocableHandlerMethod实例,以及各个组件的配置;
-			 * 后面通过调用invokeAndHandle()方法执行处理器
+			 * 根据handlerMethod和binderFactory创建一个ServletInvocableHandlerMethod。后续把请求直接交给ServletInvocableHandlerMethod执行。
+			 * createRequestMappingMethod方法比较简单，把之前RequestMappingHandlerAdapter初始化的argumentResolvers和returnValueHandlers添加至ServletInvocableHandlerMethod中
 			 */
 			ServletInvocableHandlerMethod invocableMethod = createInvocableHandlerMethod(handlerMethod);
 			if (this.argumentResolvers != null) {
