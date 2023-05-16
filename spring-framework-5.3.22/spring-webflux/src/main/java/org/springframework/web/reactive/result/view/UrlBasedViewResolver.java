@@ -323,6 +323,7 @@ public class UrlBasedViewResolver extends ViewResolverSupport
 	protected View applyLifecycleMethods(String viewName, AbstractUrlBasedView view) {
 		ApplicationContext context = getApplicationContext();
 		if (context != null) {
+			// 对生成的View对象应用初始化方法，主要包括InitializingBean.afterProperties()和一些Processor，Aware方法
 			Object initialized = context.getAutowireCapableBeanFactory().initializeBean(view, viewName);
 			if (initialized instanceof View) {
 				return (View) initialized;

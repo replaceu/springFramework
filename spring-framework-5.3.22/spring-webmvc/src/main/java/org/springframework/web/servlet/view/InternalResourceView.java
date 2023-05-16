@@ -69,7 +69,6 @@ public class InternalResourceView extends AbstractUrlBasedView {
 
 	private boolean preventDispatchLoop = false;
 
-
 	/**
 	 * Constructor for use as a bean.
 	 * @see #setUrl
@@ -96,7 +95,6 @@ public class InternalResourceView extends AbstractUrlBasedView {
 		super(url);
 		this.alwaysInclude = alwaysInclude;
 	}
-
 
 	/**
 	 * Specify whether to always include the view rather than forward to it.
@@ -129,42 +127,36 @@ public class InternalResourceView extends AbstractUrlBasedView {
 		return false;
 	}
 
-
 	/**
 	 * Render the internal resource given the specified model.
 	 * This includes setting the model as request attributes.
 	 */
 	@Override
-	protected void renderMergedOutputModel(
-			Map<String, Object> model, HttpServletRequest request, HttpServletResponse response) throws Exception {
-
-		// Expose the model object as request attributes.
+	protected void renderMergedOutputModel(Map<String, Object> model, HttpServletRequest request, HttpServletResponse response) throws Exception {
+		// 将Model中的键值对数据全部写进RequestScope中
 		exposeModelAsRequestAttributes(model, request);
 
-		// Expose helpers as request attributes, if any.
+		// 提供的一个hook方法，默认是空实现，用于用户进行request属性的自定义使用
 		exposeHelpers(request);
 
-		// Determine the path for the request dispatcher.
+		//确定请求分配器的路径
 		String dispatcherPath = prepareForRendering(request, response);
 
-		// Obtain a RequestDispatcher for the target resource (typically a JSP).
+		//获取可应用于 forward/include 的RequestDispatcher
 		RequestDispatcher rd = getRequestDispatcher(request, dispatcherPath);
-		if (rd == null) {
-			throw new ServletException("Could not get RequestDispatcher for [" + getUrl() +
-					"]: Check that the corresponding file exists within your web application archive!");
-		}
+		if (rd == null) { throw new ServletException("Could not get RequestDispatcher for [" + getUrl() + "]: Check that the corresponding file exists within your web application archive!"); }
 
-		// If already included or response already committed, perform include, else forward.
+		//判断当前是否为include请求，如果是，则调用RequestDispatcher.include()方法进行文件引入
 		if (useInclude(request, response)) {
 			response.setContentType(getContentType());
 			if (logger.isDebugEnabled()) {
 				logger.debug("Including [" + getUrl() + "]");
 			}
 			rd.include(request, response);
-		}
-
-		else {
-			// Note: The forwarded resource is supposed to determine the content type itself.
+		} else {
+			// 请求转发
+			//使用forward跳转则后面的response输出则不会执行，而用include来跳转，
+			//则include的servlet执行完后，再返回到原来的servlet执行response的输出（如果有）
 			if (logger.isDebugEnabled()) {
 				logger.debug("Forwarding to [" + getUrl() + "]");
 			}
@@ -198,19 +190,14 @@ public class InternalResourceView extends AbstractUrlBasedView {
 	 * @throws Exception if preparations failed
 	 * @see #getUrl()
 	 */
-	protected String prepareForRendering(HttpServletRequest request, HttpServletResponse response)
-			throws Exception {
+	protected String prepareForRendering(HttpServletRequest request, HttpServletResponse response) throws Exception {
 
 		String path = getUrl();
 		Assert.state(path != null, "'url' not set");
 
 		if (this.preventDispatchLoop) {
 			String uri = request.getRequestURI();
-			if (path.startsWith("/") ? uri.equals(path) : uri.equals(StringUtils.applyRelativePath(uri, path))) {
-				throw new ServletException("Circular view path [" + path + "]: would dispatch back " +
-						"to the current handler URL [" + uri + "] again. Check your ViewResolver setup! " +
-						"(Hint: This may be the result of an unspecified view, due to default view name generation.)");
-			}
+			if (path.startsWith("/") ? uri.equals(path) : uri.equals(StringUtils.applyRelativePath(uri, path))) { throw new ServletException("Circular view path [" + path + "]: would dispatch back " + "to the current handler URL [" + uri + "] again. Check your ViewResolver setup! " + "(Hint: This may be the result of an unspecified view, due to default view name generation.)"); }
 		}
 		return path;
 	}

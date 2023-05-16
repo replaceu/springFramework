@@ -187,6 +187,8 @@ public abstract class AbstractView implements View, BeanNameAware, ApplicationCo
 	 * @param exchange the current exchange
 	 * @return a {@code Mono} that represents when and if rendering succeeds
 	 */
+
+	//通过用户提供的模型数据与视图信息渲染视图
 	@Override
 	public Mono<Void> render(@Nullable Map<String, ?> model, @Nullable MediaType contentType,
 			ServerWebExchange exchange) {
