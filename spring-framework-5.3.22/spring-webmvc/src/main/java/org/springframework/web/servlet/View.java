@@ -70,7 +70,6 @@ public interface View {
 	 */
 	String SELECTED_CONTENT_TYPE = View.class.getName() + ".selectedContentType";
 
-
 	/**
 	 * Return the content type of the view, if predetermined.
 	 * <p>Can be used to check the view's content type upfront,
@@ -78,6 +77,7 @@ public interface View {
 	 * @return the content type String (optionally including a character set),
 	 * or {@code null} if not predetermined
 	 */
+	//获取返回值的contentType
 	@Nullable
 	default String getContentType() {
 		return null;
@@ -94,7 +94,8 @@ public interface View {
 	 * @param response he HTTP response we are building
 	 * @throws Exception if rendering failed
 	 */
-	void render(@Nullable Map<String, ?> model, HttpServletRequest request, HttpServletResponse response)
-			throws Exception;
+
+	//通过用户提供的模型数据与视图信息渲染视图
+	void render(@Nullable Map<String, ?> model, HttpServletRequest request, HttpServletResponse response) throws Exception;
 
 }

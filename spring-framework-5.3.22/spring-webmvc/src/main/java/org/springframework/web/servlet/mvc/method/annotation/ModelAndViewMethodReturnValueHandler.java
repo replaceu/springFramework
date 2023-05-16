@@ -47,7 +47,6 @@ public class ModelAndViewMethodReturnValueHandler implements HandlerMethodReturn
 	@Nullable
 	private String[] redirectPatterns;
 
-
 	/**
 	 * Configure one more simple patterns (as described in {@link PatternMatchUtils#simpleMatch})
 	 * to use in order to recognize custom redirect prefixes in addition to "redirect:".
@@ -68,21 +67,19 @@ public class ModelAndViewMethodReturnValueHandler implements HandlerMethodReturn
 		return this.redirectPatterns;
 	}
 
-
 	@Override
 	public boolean supportsReturnType(MethodParameter returnType) {
 		return ModelAndView.class.isAssignableFrom(returnType.getParameterType());
 	}
 
 	@Override
-	public void handleReturnValue(@Nullable Object returnValue, MethodParameter returnType,
-			ModelAndViewContainer mavContainer, NativeWebRequest webRequest) throws Exception {
-
+	public void handleReturnValue(@Nullable Object returnValue, MethodParameter returnType, ModelAndViewContainer mavContainer, NativeWebRequest webRequest) throws Exception {
+		//如果当前请求值返回null，无需处理，并且将当前请求记录为已处理
 		if (returnValue == null) {
 			mavContainer.setRequestHandled(true);
 			return;
 		}
-
+		//处理引用视图
 		ModelAndView mav = (ModelAndView) returnValue;
 		if (mav.isReference()) {
 			String viewName = mav.getViewName();
@@ -90,15 +87,17 @@ public class ModelAndViewMethodReturnValueHandler implements HandlerMethodReturn
 			if (viewName != null && isRedirectViewName(viewName)) {
 				mavContainer.setRedirectModelScenario(true);
 			}
-		}
-		else {
+		} else {
+			//处理普通视图(即我们已经制定了具体的View视图，而无需通过视图解析器再次解析)
 			View view = mav.getView();
 			mavContainer.setView(view);
 			if (view instanceof SmartView && ((SmartView) view).isRedirectView()) {
 				mavContainer.setRedirectModelScenario(true);
 			}
 		}
+		//设置返回状态
 		mavContainer.setStatus(mav.getStatus());
+		//设置数据Model
 		mavContainer.addAllAttributes(mav.getModel());
 	}
 

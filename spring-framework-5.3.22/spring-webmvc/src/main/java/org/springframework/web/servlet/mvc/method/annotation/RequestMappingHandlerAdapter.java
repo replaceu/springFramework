@@ -786,7 +786,6 @@ public class RequestMappingHandlerAdapter extends AbstractHandlerMethodAdapter i
 		ModelAndView mav;
 		checkRequest(request);
 
-		// Execute invokeHandlerMethod in synchronized block if required.
 		//如果需要，在同步块中执行invokeHandlerMethod
 		if (this.synchronizeOnSession) {
 			HttpSession session = request.getSession(false);
@@ -836,23 +835,26 @@ public class RequestMappingHandlerAdapter extends AbstractHandlerMethodAdapter i
 	}
 
 	/**
-	 * Invoke the {@link RequestMapping} handler method preparing a {@link ModelAndView}
-	 * if view resolution is required.
-	 * @since 4.2
-	 * @see #createInvocableHandlerMethod(HandlerMethod)
+	 * 1.执行处理器方法（HandlerMethod）
+	 * 2.封装并返回ModelAndView实例
 	 */
 	@Nullable
 	protected ModelAndView invokeHandlerMethod(HttpServletRequest request, HttpServletResponse response, HandlerMethod handlerMethod) throws Exception {
 		//将Request和Response进行封装
 		ServletWebRequest webRequest = new ServletWebRequest(request, response);
 		try {
+			//WebDataBinderFactory --> 工厂类，为目标对象创建一个WebDataBinder实例
+			// 1.WebDataBinder继承了DataBinder类，为web请求提供了参数绑定服务
 			WebDataBinderFactory binderFactory = getDataBinderFactory(handlerMethod);
+			// 获取ModelFactory：
+			// 2.ModelFactory可以协助控制器在调用方法之前初始化模型，并在调用之后更新模型
 			ModelFactory modelFactory = getModelFactory(handlerMethod, binderFactory);
 			/**
 			 * 根据handlerMethod和binderFactory创建一个ServletInvocableHandlerMethod。后续把请求直接交给ServletInvocableHandlerMethod执行。
 			 * createRequestMappingMethod方法比较简单，把之前RequestMappingHandlerAdapter初始化的argumentResolvers和returnValueHandlers添加至ServletInvocableHandlerMethod中
 			 */
 			ServletInvocableHandlerMethod invocableMethod = createInvocableHandlerMethod(handlerMethod);
+			// 4.尝试绑定参数、返回值解析器
 			if (this.argumentResolvers != null) {
 				invocableMethod.setHandlerMethodArgumentResolvers(this.argumentResolvers);
 			}
@@ -868,7 +870,7 @@ public class RequestMappingHandlerAdapter extends AbstractHandlerMethodAdapter i
 			mavContainer.addAllAttributes(RequestContextUtils.getInputFlashMap(request));
 			modelFactory.initModel(webRequest, mavContainer, invocableMethod);
 			mavContainer.setIgnoreDefaultModelOnRedirect(this.ignoreDefaultModelOnRedirect);
-
+			//6.异步请求相关
 			AsyncWebRequest asyncWebRequest = WebAsyncUtils.createAsyncWebRequest(request, response);
 			asyncWebRequest.setTimeout(this.asyncRequestTimeout);
 
@@ -888,7 +890,7 @@ public class RequestMappingHandlerAdapter extends AbstractHandlerMethodAdapter i
 				});
 				invocableMethod = invocableMethod.wrapConcurrentResult(result);
 			}
-			//执行处理器
+			//todo：7.调用Controller中的具体方法并处理返回值 执行处理器
 			invocableMethod.invokeAndHandle(webRequest, mavContainer);
 			if (asyncManager.isConcurrentHandlingStarted()) { return null; }
 
@@ -993,13 +995,16 @@ public class RequestMappingHandlerAdapter extends AbstractHandlerMethodAdapter i
 		return new ServletRequestDataBinderFactory(binderMethods, getWebBindingInitializer());
 	}
 
+	//从ModelAndViewContainer容器中获取ModeAndView实例
 	@Nullable
 	private ModelAndView getModelAndView(ModelAndViewContainer mavContainer, ModelFactory modelFactory, NativeWebRequest webRequest) throws Exception {
-
+		//1.更新模型
 		modelFactory.updateModel(webRequest, mavContainer);
 		if (mavContainer.isRequestHandled()) { return null; }
+		//2.获取ModelMap并创建ModelAndView
 		ModelMap model = mavContainer.getModel();
 		ModelAndView mav = new ModelAndView(mavContainer.getViewName(), model, mavContainer.getStatus());
+		//3.处理引用类型视图和转发类型视图
 		if (!mavContainer.isViewReference()) {
 			mav.setView((View) mavContainer.getView());
 		}

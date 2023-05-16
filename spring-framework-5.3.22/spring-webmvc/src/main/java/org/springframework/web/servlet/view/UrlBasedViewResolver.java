@@ -103,7 +103,6 @@ public class UrlBasedViewResolver extends AbstractCachingViewResolver implements
 	 */
 	public static final String FORWARD_URL_PREFIX = "forward:";
 
-
 	@Nullable
 	private Class<?> viewClass;
 
@@ -141,7 +140,6 @@ public class UrlBasedViewResolver extends AbstractCachingViewResolver implements
 
 	private int order = Ordered.LOWEST_PRECEDENCE;
 
-
 	/**
 	 * Set the view class that should be used to create views.
 	 * @param viewClass a class that is assignable to the required view class
@@ -151,10 +149,7 @@ public class UrlBasedViewResolver extends AbstractCachingViewResolver implements
 	 * @see AbstractUrlBasedView
 	 */
 	public void setViewClass(@Nullable Class<?> viewClass) {
-		if (viewClass != null && !requiredViewClass().isAssignableFrom(viewClass)) {
-			throw new IllegalArgumentException("Given view class [" + viewClass.getName() +
-					"] is not of type [" + requiredViewClass().getName() + "]");
-		}
+		if (viewClass != null && !requiredViewClass().isAssignableFrom(viewClass)) { throw new IllegalArgumentException("Given view class [" + viewClass.getName() + "] is not of type [" + requiredViewClass().getName() + "]"); }
 		this.viewClass = viewClass;
 	}
 
@@ -437,11 +432,8 @@ public class UrlBasedViewResolver extends AbstractCachingViewResolver implements
 	@Override
 	protected void initApplicationContext() {
 		super.initApplicationContext();
-		if (getViewClass() == null) {
-			throw new IllegalArgumentException("Property 'viewClass' is required");
-		}
+		if (getViewClass() == null) { throw new IllegalArgumentException("Property 'viewClass' is required"); }
 	}
-
 
 	/**
 	 * This implementation returns just the view name,
@@ -464,15 +456,12 @@ public class UrlBasedViewResolver extends AbstractCachingViewResolver implements
 	protected View createView(String viewName, Locale locale) throws Exception {
 		// If this resolver is not supposed to handle the given view,
 		// return null to pass on to the next resolver in the chain.
-		if (!canHandle(viewName, locale)) {
-			return null;
-		}
-
-		// Check for special "redirect:" prefix.
+		if (!canHandle(viewName, locale)) { return null; }
+		// 检查特殊的"redirect:"前缀 REDIRECT_URL_PREFIX = "redirect:"
+		// 如果是以"redirect:" 开头, 说明该视图是重定向
 		if (viewName.startsWith(REDIRECT_URL_PREFIX)) {
 			String redirectUrl = viewName.substring(REDIRECT_URL_PREFIX.length());
-			RedirectView view = new RedirectView(redirectUrl,
-					isRedirectContextRelative(), isRedirectHttp10Compatible());
+			RedirectView view = new RedirectView(redirectUrl, isRedirectContextRelative(), isRedirectHttp10Compatible());
 			String[] hosts = getRedirectHosts();
 			if (hosts != null) {
 				view.setHosts(hosts);
@@ -480,14 +469,15 @@ public class UrlBasedViewResolver extends AbstractCachingViewResolver implements
 			return applyLifecycleMethods(REDIRECT_URL_PREFIX, view);
 		}
 
-		// Check for special "forward:" prefix.
+		// 检查特殊的"forward:"前缀 FORWARD_URL_PREFIX = "forward:"
+		// 如果是以"forward:" 开头, 说明该视图是请求转发
 		if (viewName.startsWith(FORWARD_URL_PREFIX)) {
 			String forwardUrl = viewName.substring(FORWARD_URL_PREFIX.length());
 			InternalResourceView view = new InternalResourceView(forwardUrl);
 			return applyLifecycleMethods(FORWARD_URL_PREFIX, view);
 		}
 
-		// Else fall back to superclass implementation: calling loadView.
+		//如果是普通视图, 创建该视图视图
 		return super.createView(viewName, locale);
 	}
 
@@ -613,9 +603,7 @@ public class UrlBasedViewResolver extends AbstractCachingViewResolver implements
 		ApplicationContext context = getApplicationContext();
 		if (context != null) {
 			Object initialized = context.getAutowireCapableBeanFactory().initializeBean(view, viewName);
-			if (initialized instanceof View) {
-				return (View) initialized;
-			}
+			if (initialized instanceof View) { return (View) initialized; }
 		}
 		return view;
 	}

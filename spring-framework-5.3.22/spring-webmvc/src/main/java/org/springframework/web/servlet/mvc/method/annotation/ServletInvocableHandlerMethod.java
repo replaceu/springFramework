@@ -109,10 +109,11 @@ public class ServletInvocableHandlerMethod extends InvocableHandlerMethod {
 	 * @param providedArgs "given" arguments matched by type (not resolved)
 	 */
 	public void invokeAndHandle(ServletWebRequest webRequest, ModelAndViewContainer mavContainer, Object... providedArgs) throws Exception {
-		//处理请求，returnValue为返回的ModelAndView的实例或者viewName
+		//1.调用controller中的具体方法
 		Object returnValue = invokeForRequest(webRequest, mavContainer, providedArgs);
+		//2.设置返回状态码
 		setResponseStatus(webRequest);
-
+		//3.当前请求无返回值或者返回值中包含错误，则将请求完成标识设置为true并返回
 		if (returnValue == null) {
 			if (isRequestNotModified(webRequest) || getResponseStatus() != null || mavContainer.isRequestHandled()) {
 				disableContentCachingIfNecessary(webRequest);
@@ -123,11 +124,11 @@ public class ServletInvocableHandlerMethod extends InvocableHandlerMethod {
 			mavContainer.setRequestHandled(true);
 			return;
 		}
-
+		//4.当前请求有返回值且无错误信息，则将请求完成标识设置为false，并继续处理当前请求
 		mavContainer.setRequestHandled(false);
 		Assert.state(this.returnValueHandlers != null, "No return value handlers");
 		try {
-			//封装返回的数据信息
+			//选取合适的HandlerMethodReturnValueHandler，并处理返回值
 			this.returnValueHandlers.handleReturnValue(returnValue, getReturnValueType(returnValue), mavContainer, webRequest);
 		} catch (Exception ex) {
 			if (logger.isTraceEnabled()) {
