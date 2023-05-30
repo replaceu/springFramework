@@ -932,20 +932,28 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 
 		Assert.hasText(beanName, "Bean name must not be empty");
 		Assert.notNull(beanDefinition, "BeanDefinition must not be null");
-
+		//如果beanDefinition是AbstractBeanDefinition实例,则验证
 		if (beanDefinition instanceof AbstractBeanDefinition) {
 			try {
+				/*验证不能将静态工厂方法与方法重写相结合(静态工厂方法必须创建实例)
+				主要是对于AbstractBeanDefinition属性中的methodOverrides校验，
+				校验methodOverrides是否与工厂方法并存或者methodOverrides对应的方法根本不存在
+				 */
 				((AbstractBeanDefinition) beanDefinition).validate();
 			} catch (BeanDefinitionValidationException ex) {
 				throw new BeanDefinitionStoreException(beanDefinition.getResourceDescription(), beanName, "Validation of bean definition failed", ex);
 			}
 		}
-
+		// 尝试从缓存中加载BeanDefinition
 		BeanDefinition existingDefinition = this.beanDefinitionMap.get(beanName);
+		// beanName已经存在且不允许被覆盖，抛出异常
 		if (existingDefinition != null) {
+			// 如果对应的beanName已经注册且在配置中配置了bean不允许被覆盖，则抛出异常。
 			if (!isAllowBeanDefinitionOverriding()) {
 				throw new BeanDefinitionOverrideException(beanName, beanDefinition, existingDefinition);
-			} else if (existingDefinition.getRole() < beanDefinition.getRole()) {
+			}
+			// 使用新的BeanDefinition覆盖已经加载的BeanDefinition
+			else if (existingDefinition.getRole() < beanDefinition.getRole()) {
 				// e.g. was ROLE_APPLICATION, now overriding with ROLE_SUPPORT or ROLE_INFRASTRUCTURE
 				if (logger.isInfoEnabled()) {
 					logger.info("Overriding user-defined bean definition for bean '" + beanName + "' with a framework-generated bean definition: replacing [" + existingDefinition + "] with [" + beanDefinition + "]");
@@ -961,18 +969,27 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 			}
 			this.beanDefinitionMap.put(beanName, beanDefinition);
 		} else {
+			//缓存中无对应的BeanDefinition，则直接注册
+			//如果beanDefinition已经被标记为创建
 			if (hasBeanCreationStarted()) {
 				// Cannot modify startup-time collection elements anymore (for stable iteration)
+				// 因为beanDefinitionMap是全局变量，这里定会存在并发访问的情况
 				synchronized (this.beanDefinitionMap) {
+					//加入beanDefinitionMap
 					this.beanDefinitionMap.put(beanName, beanDefinition);
+					// 创建List<String>并将缓存的beanDefinitionNames和新解析的beanName加入集合
 					List<String> updatedDefinitions = new ArrayList<>(this.beanDefinitionNames.size() + 1);
 					updatedDefinitions.addAll(this.beanDefinitionNames);
 					updatedDefinitions.add(beanName);
+					//将updatedDefinitions赋值给beanDefinitionNames
 					this.beanDefinitionNames = updatedDefinitions;
+					//移除新注册的beanName
 					removeManualSingletonName(beanName);
 				}
 			} else {
 				// Still in startup registration phase
+				// 将beanDefinition信息维护至缓存
+				// beanDefinitionMap-->(key->beanName,value->beanDefinition)
 				this.beanDefinitionMap.put(beanName, beanDefinition);
 				this.beanDefinitionNames.add(beanName);
 				removeManualSingletonName(beanName);
@@ -981,6 +998,7 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 		}
 
 		if (existingDefinition != null || containsSingleton(beanName)) {
+			//重置所有beanName对应的缓存
 			resetBeanDefinition(beanName);
 		} else if (isConfigurationFrozen()) {
 			clearByTypeCache();
