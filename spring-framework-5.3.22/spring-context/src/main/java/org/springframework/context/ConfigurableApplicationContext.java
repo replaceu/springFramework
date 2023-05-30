@@ -51,6 +51,8 @@ public interface ConfigurableApplicationContext extends ApplicationContext, Life
 	 * @see org.springframework.web.context.ContextLoader#CONFIG_LOCATION_PARAM
 	 * @see org.springframework.web.servlet.FrameworkServlet#setContextConfigLocation
 	 */
+
+	//应用上下文配置时，这些符号用于分割多个配置路径
 	String CONFIG_LOCATION_DELIMITERS = ",; \t\n";
 
 	/**
@@ -59,6 +61,7 @@ public interface ConfigurableApplicationContext extends ApplicationContext, Life
 	 * @since 3.0
 	 * @see org.springframework.core.convert.ConversionService
 	 */
+	//BeanFactory中，ConversionService类所对应的bean的名字。如果没有此类的实例的话吗，则使用默认的转换规则
 	String CONVERSION_SERVICE_BEAN_NAME = "conversionService";
 
 	/**
@@ -68,24 +71,31 @@ public interface ConfigurableApplicationContext extends ApplicationContext, Life
 	 * @since 2.5
 	 * @see org.springframework.instrument.classloading.LoadTimeWeaver
 	 */
+
+	//LoadTimeWaver类所对应的Bean在容器中的名字。如果提供了该实例，上下文会使用临时的ClassLoader，这样，LoadTimeWaver就可以使用bean确切的类型了
 	String LOAD_TIME_WEAVER_BEAN_NAME = "loadTimeWeaver";
 
 	/**
 	 * Name of the {@link Environment} bean in the factory.
 	 * @since 3.1
 	 */
+	//Environment 类在容器中实例的名字
 	String ENVIRONMENT_BEAN_NAME = "environment";
 
 	/**
 	 * Name of the System properties bean in the factory.
 	 * @see java.lang.System#getProperties()
 	 */
+
+	//System系统变量在容器中对应的Bean的名字
 	String SYSTEM_PROPERTIES_BEAN_NAME = "systemProperties";
 
 	/**
 	 * Name of the System environment bean in the factory.
 	 * @see java.lang.System#getenv()
 	 */
+
+	//System环境变量在容器中对应的Bean的名字
 	String SYSTEM_ENVIRONMENT_BEAN_NAME = "systemEnvironment";
 
 	/**
@@ -107,6 +117,7 @@ public interface ConfigurableApplicationContext extends ApplicationContext, Life
 	 * Set the unique id of this application context.
 	 * @since 3.0
 	 */
+	//设置容器的唯一ID
 	void setId(String id);
 
 	/**
@@ -117,6 +128,7 @@ public interface ConfigurableApplicationContext extends ApplicationContext, Life
 	 * @param parent the parent context
 	 * @see org.springframework.web.context.ConfigurableWebApplicationContext
 	 */
+	//设置此容器的父容器
 	void setParent(@Nullable ApplicationContext parent);
 
 	/**
@@ -124,6 +136,7 @@ public interface ConfigurableApplicationContext extends ApplicationContext, Life
 	 * @param environment the new environment
 	 * @since 3.1
 	 */
+	//设置容器的Environment变量
 	void setEnvironment(ConfigurableEnvironment environment);
 
 	/**
@@ -131,6 +144,8 @@ public interface ConfigurableApplicationContext extends ApplicationContext, Life
 	 * form, allowing for further customization.
 	 * @since 3.1
 	 */
+
+	//以ConfigurableEnvironment的形式返回此容器的环境变量。以使用户更好的进行配置
 	@Override
 	ConfigurableEnvironment getEnvironment();
 
@@ -155,6 +170,8 @@ public interface ConfigurableApplicationContext extends ApplicationContext, Life
 	 * bean definitions get evaluated. To be invoked during context configuration.
 	 * @param postProcessor the factory processor to register
 	 */
+
+	//此方法一般在读取应用上下文配置的时候调用，用以向此容器中增加BeanFactoryPostProcessor。增加的Processor会在容器refresh的时候使用
 	void addBeanFactoryPostProcessor(BeanFactoryPostProcessor postProcessor);
 
 	/**
@@ -167,6 +184,7 @@ public interface ConfigurableApplicationContext extends ApplicationContext, Life
 	 * @see org.springframework.context.event.ContextRefreshedEvent
 	 * @see org.springframework.context.event.ContextClosedEvent
 	 */
+	//向容器增加一个ApplicationListener，增加的Listener用于发布上下文事件，如refresh和shutdown等
 	void addApplicationListener(ApplicationListener<?> listener);
 
 	/**

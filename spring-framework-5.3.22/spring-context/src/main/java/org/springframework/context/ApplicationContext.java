@@ -119,6 +119,8 @@ public interface ApplicationContext extends EnvironmentCapable, ListableBeanFact
 	 * @see ConfigurableApplicationContext#refresh()
 	 * @see ConfigurableApplicationContext#getBeanFactory()
 	 */
+
+	//将AutowireCapableBeanFactory接口暴露给外部使用
 	AutowireCapableBeanFactory getAutowireCapableBeanFactory() throws IllegalStateException;
 
 }
