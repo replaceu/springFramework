@@ -216,6 +216,8 @@ public interface ConfigurableApplicationContext extends ApplicationContext, Life
 	 * @throws IllegalStateException if already initialized and multiple refresh
 	 * attempts are not supported
 	 */
+	// 这是初始化方法，因此如果调用此方法失败的情况下，要将其已经创建的 Bean 销毁。
+	// 换句话说，调用此方法以后，要么所有的Bean都实例化好了，要么就一个都没有实例化
 	void refresh() throws BeansException, IllegalStateException;
 
 	/**
@@ -228,6 +230,8 @@ public interface ConfigurableApplicationContext extends ApplicationContext, Life
 	 * @see java.lang.Runtime#addShutdownHook
 	 * @see #close()
 	 */
+
+	// 向JVM注册一个回调函数，用以在JVM关闭时，销毁此应用上下文
 	void registerShutdownHook();
 
 	/**
@@ -238,6 +242,8 @@ public interface ConfigurableApplicationContext extends ApplicationContext, Life
 	 * <p>This method can be called multiple times without side effects: Subsequent
 	 * {@code close} calls on an already closed context will be ignored.
 	 */
+
+	//关闭此应用上下文,释放其所占有的所有资源和锁。并销毁其所有创建好的singleton Beans
 	@Override
 	void close();
 
@@ -249,6 +255,7 @@ public interface ConfigurableApplicationContext extends ApplicationContext, Life
 	 * @see #close()
 	 * @see #getBeanFactory()
 	 */
+	//检测此FactoryBean是否被启动过
 	boolean isActive();
 
 	/**
@@ -270,6 +277,10 @@ public interface ConfigurableApplicationContext extends ApplicationContext, Life
 	 * @see #close()
 	 * @see #addBeanFactoryPostProcessor
 	 */
+
+	// 返回此应用上下文的容器。
+	// 千万不要使用此方法来对 BeanFactory 生成的 Bean 做后置处理，因为单例 Bean 在此之前已经生成。
+	// 这种情况下应该使用 BeanFactoryPostProcessor 来在 Bean 生成之前对其进行处理
 	ConfigurableListableBeanFactory getBeanFactory() throws IllegalStateException;
 
 }

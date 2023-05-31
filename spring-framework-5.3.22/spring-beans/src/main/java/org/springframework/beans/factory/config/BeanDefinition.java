@@ -41,45 +41,15 @@ import org.springframework.lang.Nullable;
 public interface BeanDefinition extends AttributeAccessor, BeanMetadataElement {
 
 	/**
-	 * Scope identifier for the standard singleton scope: {@value}.
-	 * <p>Note that extended bean factories might support further scopes.
-	 * @see #setScope
-	 * @see ConfigurableBeanFactory#SCOPE_SINGLETON
+	 * 单例、原型标识符
 	 */
 	String SCOPE_SINGLETON = ConfigurableBeanFactory.SCOPE_SINGLETON;
-
-	/**
-	 * Scope identifier for the standard prototype scope: {@value}.
-	 * <p>Note that extended bean factories might support further scopes.
-	 * @see #setScope
-	 * @see ConfigurableBeanFactory#SCOPE_PROTOTYPE
-	 */
 	String SCOPE_PROTOTYPE = ConfigurableBeanFactory.SCOPE_PROTOTYPE;
 
 
-	/**
-	 * Role hint indicating that a {@code BeanDefinition} is a major part
-	 * of the application. Typically corresponds to a user-defined bean.
-	 */
+	//标识 Bean 的类别，分别对应 用户定义的 Bean、来源于配置文件的 Bean、Spring 内部的 Bean
 	int ROLE_APPLICATION = 0;
-
-	/**
-	 * Role hint indicating that a {@code BeanDefinition} is a supporting
-	 * part of some larger configuration, typically an outer
-	 * {@link org.springframework.beans.factory.parsing.ComponentDefinition}.
-	 * {@code SUPPORT} beans are considered important enough to be aware
-	 * of when looking more closely at a particular
-	 * {@link org.springframework.beans.factory.parsing.ComponentDefinition},
-	 * but not when looking at the overall configuration of an application.
-	 */
 	int ROLE_SUPPORT = 1;
-
-	/**
-	 * Role hint indicating that a {@code BeanDefinition} is providing an
-	 * entirely background role and has no relevance to the end-user. This hint is
-	 * used when registering beans that are completely part of the internal workings
-	 * of a {@link org.springframework.beans.factory.parsing.ComponentDefinition}.
-	 */
 	int ROLE_INFRASTRUCTURE = 2;
 
 
@@ -88,7 +58,7 @@ public interface BeanDefinition extends AttributeAccessor, BeanMetadataElement {
 	/**
 	 * Set the name of the parent definition of this bean definition, if any.
 	 */
-	//设置父 bean，这里涉及到 bean 继承，不是 java 继承。一句话就是：继承父 bean 的配置信息
+	//设置父bean，这里涉及到bean继承，不是java 继承。一句话就是：继承父bean的配置信息
 	void setParentName(@Nullable String parentName);
 
 	/**
@@ -128,7 +98,7 @@ public interface BeanDefinition extends AttributeAccessor, BeanMetadataElement {
 	 * @see #SCOPE_SINGLETON
 	 * @see #SCOPE_PROTOTYPE
 	 */
-	// 设置 bean 的 scope两种SCOPE_SINGLETON/SCOPE_PROTOTYPE
+	// 设置bean的作用域，两种SCOPE_SINGLETON/SCOPE_PROTOTYPE
 	void setScope(@Nullable String scope);
 
 	/**
@@ -201,7 +171,7 @@ public interface BeanDefinition extends AttributeAccessor, BeanMetadataElement {
 	 * This the name of the bean to call the specified factory method on.
 	 * @see #setFactoryMethodName
 	 */
-	// 如果该 Bean 采用工厂方法生成，指定工厂名称。
+	// 如果该Bean采用工厂方法生成，指定工厂名称。
 	// 一句话就是：有些实例不是用反射生成的，而是用工厂模式生成的
 	void setFactoryBeanName(@Nullable String factoryBeanName);
 
@@ -335,24 +305,9 @@ public interface BeanDefinition extends AttributeAccessor, BeanMetadataElement {
 	 */
 	ResolvableType getResolvableType();
 
-	/**
-	 * Return whether this a <b>Singleton</b>, with a single, shared instance
-	 * returned on all calls.
-	 * @see #SCOPE_SINGLETON
-	 */
+	//返回该Bean是否是单例、是否是非单例、是否是抽象的
 	boolean isSingleton();
-
-	/**
-	 * Return whether this a <b>Prototype</b>, with an independent instance
-	 * returned for each call.
-	 * @since 3.0
-	 * @see #SCOPE_PROTOTYPE
-	 */
 	boolean isPrototype();
-
-	/**
-	 * Return whether this bean is "abstract", that is, not meant to be instantiated.
-	 */
 	boolean isAbstract();
 
 	/**

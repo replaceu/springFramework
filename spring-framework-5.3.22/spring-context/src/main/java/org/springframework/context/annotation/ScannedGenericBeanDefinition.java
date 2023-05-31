@@ -45,6 +45,9 @@ import org.springframework.util.Assert;
  * @see org.springframework.core.type.classreading.MetadataReaderFactory
  * @see AnnotatedGenericBeanDefinition
  */
+
+//该类继承自 GenericBeanDefinition ，并实现了 AnnotatedBeanDefinition 接口。
+//这个 BeanDefinition用来描述标注@Component注解的 Bean，其派生注解如 @Service、@Controller也同理。
 @SuppressWarnings("serial")
 public class ScannedGenericBeanDefinition extends GenericBeanDefinition implements AnnotatedBeanDefinition {
 

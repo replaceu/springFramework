@@ -56,23 +56,28 @@ import org.springframework.util.Assert;
 @SuppressWarnings("serial")
 public class RootBeanDefinition extends AbstractBeanDefinition {
 
+	//BeanDefinitionHolder存储Bean的名称、别名、BeanDefinition
 	@Nullable
 	private BeanDefinitionHolder decoratedDefinition;
 
+	//AnnotatedElement是java反射包的接口，通过它可以查看Bean的注解信息
 	@Nullable
 	private AnnotatedElement qualifiedElement;
 
 	/** Determines if the definition needs to be re-merged. */
 	volatile boolean stale;
 
+	//允许缓存
 	boolean allowCaching = true;
 
+	//工厂方法是否唯一
 	boolean isFactoryMethodUnique;
 
+	//封装了 java.lang.reflect.Type，提供了泛型相关的操作
 	@Nullable
 	volatile ResolvableType targetType;
 
-	/** Package-visible field for caching the determined Class of a given bean definition. */
+	//缓存Class，表示RootBeanDefinition存储哪个类的信息
 	@Nullable
 	volatile Class<?> resolvedTargetType;
 
@@ -80,7 +85,7 @@ public class RootBeanDefinition extends AbstractBeanDefinition {
 	@Nullable
 	volatile Boolean isFactoryBean;
 
-	/** Package-visible field for caching the return type of a generically typed factory method. */
+	//缓存工厂方法的返回类型
 	@Nullable
 	volatile ResolvableType factoryMethodReturnType;
 
@@ -92,43 +97,38 @@ public class RootBeanDefinition extends AbstractBeanDefinition {
 	@Nullable
 	volatile String resolvedDestroyMethodName;
 
-	/** Common lock for the four constructor fields below. */
+	//这是以下四个构造方法字段的通用锁
 	final Object constructorArgumentLock = new Object();
-
-	/** Package-visible field for caching the resolved constructor or factory method. */
+	// 用于缓存已解析的构造方法或工厂方法
 	@Nullable
 	Executable resolvedConstructorOrFactoryMethod;
-
-	/** Package-visible field that marks the constructor arguments as resolved. */
+	//将构造方法参数标记为已解析
 	boolean constructorArgumentsResolved = false;
-
-	/** Package-visible field for caching fully resolved constructor arguments. */
+	//用于缓存完全解析的构造方法参数
 	@Nullable
 	Object[] resolvedConstructorArguments;
-
-	/** Package-visible field for caching partly prepared constructor arguments. */
+	//缓存待解析的构造方法参数
 	@Nullable
 	Object[] preparedConstructorArguments;
 
-	/** Common lock for the two post-processing fields below. */
+	//这是以下两个后处理字段的通用锁
 	final Object postProcessingLock = new Object();
-
-	/** Package-visible field that indicates MergedBeanDefinitionPostProcessor having been applied. */
+	//表明是否被 MergedBeanDefinitionPostProcessor处理过
 	boolean postProcessed = false;
-
-	/** Package-visible field that indicates a before-instantiation post-processor having kicked in. */
+	//在生成代理的时候会使用，表明是否已经生成代理
 	@Nullable
 	volatile Boolean beforeInstantiationResolved;
 
+	//实际缓存的类型是Constructor、Field、Method 类型
 	@Nullable
 	private Set<Member> externallyManagedConfigMembers;
-
+	//InitializingBean中的init回调函数名afterPropertiesSet会在这里记录，以便进行生命周期回调
 	@Nullable
 	private Set<String> externallyManagedInitMethods;
 
+	//DisposableBean的destroy回调函数名destroy会在这里记录，以便进生命周期回调
 	@Nullable
 	private Set<String> externallyManagedDestroyMethods;
-
 
 	/**
 	 * Create a new RootBeanDefinition, to be configured through its bean
@@ -208,8 +208,7 @@ public class RootBeanDefinition extends AbstractBeanDefinition {
 	 * @param cargs the constructor argument values to apply
 	 * @param pvs the property values to apply
 	 */
-	public RootBeanDefinition(@Nullable Class<?> beanClass, @Nullable ConstructorArgumentValues cargs,
-			@Nullable MutablePropertyValues pvs) {
+	public RootBeanDefinition(@Nullable Class<?> beanClass, @Nullable ConstructorArgumentValues cargs, @Nullable MutablePropertyValues pvs) {
 
 		super(cargs, pvs);
 		setBeanClass(beanClass);
@@ -262,7 +261,6 @@ public class RootBeanDefinition extends AbstractBeanDefinition {
 		super(original);
 	}
 
-
 	@Override
 	public String getParentName() {
 		return null;
@@ -270,9 +268,7 @@ public class RootBeanDefinition extends AbstractBeanDefinition {
 
 	@Override
 	public void setParentName(@Nullable String parentName) {
-		if (parentName != null) {
-			throw new IllegalArgumentException("Root bean cannot be changed into a child bean with parent reference");
-		}
+		if (parentName != null) { throw new IllegalArgumentException("Root bean cannot be changed into a child bean with parent reference"); }
 	}
 
 	/**
@@ -334,9 +330,7 @@ public class RootBeanDefinition extends AbstractBeanDefinition {
 	 */
 	@Nullable
 	public Class<?> getTargetType() {
-		if (this.resolvedTargetType != null) {
-			return this.resolvedTargetType;
-		}
+		if (this.resolvedTargetType != null) { return this.resolvedTargetType; }
 		ResolvableType targetType = this.targetType;
 		return (targetType != null ? targetType.resolve() : null);
 	}
@@ -354,17 +348,11 @@ public class RootBeanDefinition extends AbstractBeanDefinition {
 	@Override
 	public ResolvableType getResolvableType() {
 		ResolvableType targetType = this.targetType;
-		if (targetType != null) {
-			return targetType;
-		}
+		if (targetType != null) { return targetType; }
 		ResolvableType returnType = this.factoryMethodReturnType;
-		if (returnType != null) {
-			return returnType;
-		}
+		if (returnType != null) { return returnType; }
 		Method factoryMethod = this.factoryMethodToIntrospect;
-		if (factoryMethod != null) {
-			return ResolvableType.forMethodReturnType(factoryMethod);
-		}
+		if (factoryMethod != null) { return ResolvableType.forMethodReturnType(factoryMethod); }
 		return super.getResolvableType();
 	}
 
@@ -441,8 +429,7 @@ public class RootBeanDefinition extends AbstractBeanDefinition {
 	 */
 	public boolean isExternallyManagedConfigMember(Member configMember) {
 		synchronized (this.postProcessingLock) {
-			return (this.externallyManagedConfigMembers != null &&
-					this.externallyManagedConfigMembers.contains(configMember));
+			return (this.externallyManagedConfigMembers != null && this.externallyManagedConfigMembers.contains(configMember));
 		}
 	}
 
@@ -452,9 +439,7 @@ public class RootBeanDefinition extends AbstractBeanDefinition {
 	 */
 	public Set<Member> getExternallyManagedConfigMembers() {
 		synchronized (this.postProcessingLock) {
-			return (this.externallyManagedConfigMembers != null ?
-					Collections.unmodifiableSet(new LinkedHashSet<>(this.externallyManagedConfigMembers)) :
-					Collections.emptySet());
+			return (this.externallyManagedConfigMembers != null ? Collections.unmodifiableSet(new LinkedHashSet<>(this.externallyManagedConfigMembers)) : Collections.emptySet());
 		}
 	}
 
@@ -486,8 +471,7 @@ public class RootBeanDefinition extends AbstractBeanDefinition {
 	 */
 	public boolean isExternallyManagedInitMethod(String initMethod) {
 		synchronized (this.postProcessingLock) {
-			return (this.externallyManagedInitMethods != null &&
-					this.externallyManagedInitMethods.contains(initMethod));
+			return (this.externallyManagedInitMethods != null && this.externallyManagedInitMethods.contains(initMethod));
 		}
 	}
 
@@ -503,17 +487,13 @@ public class RootBeanDefinition extends AbstractBeanDefinition {
 	 */
 	boolean hasAnyExternallyManagedInitMethod(String initMethod) {
 		synchronized (this.postProcessingLock) {
-			if (isExternallyManagedInitMethod(initMethod)) {
-				return true;
-			}
+			if (isExternallyManagedInitMethod(initMethod)) { return true; }
 			if (this.externallyManagedInitMethods != null) {
 				for (String candidate : this.externallyManagedInitMethods) {
 					int indexOfDot = candidate.lastIndexOf('.');
 					if (indexOfDot >= 0) {
 						String methodName = candidate.substring(indexOfDot + 1);
-						if (methodName.equals(initMethod)) {
-							return true;
-						}
+						if (methodName.equals(initMethod)) { return true; }
 					}
 				}
 			}
@@ -529,9 +509,7 @@ public class RootBeanDefinition extends AbstractBeanDefinition {
 	 */
 	public Set<String> getExternallyManagedInitMethods() {
 		synchronized (this.postProcessingLock) {
-			return (this.externallyManagedInitMethods != null ?
-					Collections.unmodifiableSet(new LinkedHashSet<>(this.externallyManagedInitMethods)) :
-					Collections.emptySet());
+			return (this.externallyManagedInitMethods != null ? Collections.unmodifiableSet(new LinkedHashSet<>(this.externallyManagedInitMethods)) : Collections.emptySet());
 		}
 	}
 
@@ -563,8 +541,7 @@ public class RootBeanDefinition extends AbstractBeanDefinition {
 	 */
 	public boolean isExternallyManagedDestroyMethod(String destroyMethod) {
 		synchronized (this.postProcessingLock) {
-			return (this.externallyManagedDestroyMethods != null &&
-					this.externallyManagedDestroyMethods.contains(destroyMethod));
+			return (this.externallyManagedDestroyMethods != null && this.externallyManagedDestroyMethods.contains(destroyMethod));
 		}
 	}
 
@@ -580,17 +557,13 @@ public class RootBeanDefinition extends AbstractBeanDefinition {
 	 */
 	boolean hasAnyExternallyManagedDestroyMethod(String destroyMethod) {
 		synchronized (this.postProcessingLock) {
-			if (isExternallyManagedDestroyMethod(destroyMethod)) {
-				return true;
-			}
+			if (isExternallyManagedDestroyMethod(destroyMethod)) { return true; }
 			if (this.externallyManagedDestroyMethods != null) {
 				for (String candidate : this.externallyManagedDestroyMethods) {
 					int indexOfDot = candidate.lastIndexOf('.');
 					if (indexOfDot >= 0) {
 						String methodName = candidate.substring(indexOfDot + 1);
-						if (methodName.equals(destroyMethod)) {
-							return true;
-						}
+						if (methodName.equals(destroyMethod)) { return true; }
 					}
 				}
 			}
@@ -606,12 +579,9 @@ public class RootBeanDefinition extends AbstractBeanDefinition {
 	 */
 	public Set<String> getExternallyManagedDestroyMethods() {
 		synchronized (this.postProcessingLock) {
-			return (this.externallyManagedDestroyMethods != null ?
-					Collections.unmodifiableSet(new LinkedHashSet<>(this.externallyManagedDestroyMethods)) :
-					Collections.emptySet());
+			return (this.externallyManagedDestroyMethods != null ? Collections.unmodifiableSet(new LinkedHashSet<>(this.externallyManagedDestroyMethods)) : Collections.emptySet());
 		}
 	}
-
 
 	@Override
 	public RootBeanDefinition cloneBeanDefinition() {

@@ -155,7 +155,7 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 	/** Map from dependency type to corresponding autowired value. */
 	private final Map<Class<?>, Object> resolvableDependencies = new ConcurrentHashMap<>(16);
 
-	/** Map of bean definition objects, keyed by bean name. */
+	//存储所有的BeanDefinition，key是Bean的名称。我们一直称呼的容器，底层就是这个 Map
 	private final Map<String, BeanDefinition> beanDefinitionMap = new ConcurrentHashMap<>(256);
 
 	/** Map from bean name to merged BeanDefinitionHolder. */
@@ -167,13 +167,13 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 	/** Map of singleton-only bean names, keyed by dependency type. */
 	private final Map<Class<?>, String[]> singletonBeanNamesByType = new ConcurrentHashMap<>(64);
 
-	/** List of bean definition names, in registration order. */
+	//存储所有Bean名称
 	private volatile List<String> beanDefinitionNames = new ArrayList<>(256);
 
-	/** List of names of manually registered singletons, in registration order. */
+	//存储手动注册的单例Bean名称
 	private volatile Set<String> manualSingletonNames = new LinkedHashSet<>(16);
 
-	/** Cached array of bean definition names in case of frozen configuration. */
+	//存储冻结的BeanDefinition，留作后面缓存用
 	@Nullable
 	private volatile String[] frozenBeanDefinitionNames;
 
@@ -927,6 +927,7 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 	// Implementation of BeanDefinitionRegistry interface
 	//---------------------------------------------------------------------
 
+	//方法的入参为Bean名称和对应的BeanDefinition
 	@Override
 	public void registerBeanDefinition(String beanName, BeanDefinition beanDefinition) throws BeanDefinitionStoreException {
 
@@ -935,16 +936,16 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 		//如果beanDefinition是AbstractBeanDefinition实例,则验证
 		if (beanDefinition instanceof AbstractBeanDefinition) {
 			try {
-				/*验证不能将静态工厂方法与方法重写相结合(静态工厂方法必须创建实例)
-				主要是对于AbstractBeanDefinition属性中的methodOverrides校验，
-				校验methodOverrides是否与工厂方法并存或者methodOverrides对应的方法根本不存在
-				 */
+				// 验证：
+				// 如果有重写方法，但是是工厂方法，则抛出异常，因为重写方法需要代理，而工厂方法无法代理；
+				// 通过方法名称，判断 Bean 中该名称方法存在的数量，0：方法不存在，报错；1：方法非重载，overloaded 属性设为 false
+
 				((AbstractBeanDefinition) beanDefinition).validate();
 			} catch (BeanDefinitionValidationException ex) {
 				throw new BeanDefinitionStoreException(beanDefinition.getResourceDescription(), beanName, "Validation of bean definition failed", ex);
 			}
 		}
-		// 尝试从缓存中加载BeanDefinition
+		//尝试从beanDefinitionMap中加载BeanDefinition
 		BeanDefinition existingDefinition = this.beanDefinitionMap.get(beanName);
 		// beanName已经存在且不允许被覆盖，抛出异常
 		if (existingDefinition != null) {
@@ -952,24 +953,31 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 			if (!isAllowBeanDefinitionOverriding()) {
 				throw new BeanDefinitionOverrideException(beanName, beanDefinition, existingDefinition);
 			}
-			// 使用新的BeanDefinition覆盖已经加载的BeanDefinition
+			/************************若允许覆盖************************************/
+			//判断 Bean 的角色大小:
+			// 0：用户定义的 Bean，1：来源于配置文件的 Bean，2：Spring内部的 Bean；
+			// 当原 BeanDefinition角色小于新的 BeanDefinition角色时，输出一个 warn 日志，提示 BeanDefinition 被覆盖
 			else if (existingDefinition.getRole() < beanDefinition.getRole()) {
 				// e.g. was ROLE_APPLICATION, now overriding with ROLE_SUPPORT or ROLE_INFRASTRUCTURE
 				if (logger.isInfoEnabled()) {
 					logger.info("Overriding user-defined bean definition for bean '" + beanName + "' with a framework-generated bean definition: replacing [" + existingDefinition + "] with [" + beanDefinition + "]");
 				}
+				//当新BeanDefinition属性值不等于原 BeanDefinition属性值时，输出 info 提示信息
 			} else if (!beanDefinition.equals(existingDefinition)) {
 				if (logger.isDebugEnabled()) {
 					logger.debug("Overriding bean definition for bean '" + beanName + "' with a different definition: replacing [" + existingDefinition + "] with [" + beanDefinition + "]");
 				}
+				//最后，输出debug日志信息：用等效的新BeanDefinition覆盖原BeanDefinition
 			} else {
 				if (logger.isTraceEnabled()) {
 					logger.trace("Overriding bean definition for bean '" + beanName + "' with an equivalent definition: replacing [" + existingDefinition + "] with [" + beanDefinition + "]");
 				}
 			}
+			//添加至BeanDefinition集合，并覆盖原BeanDefinition
 			this.beanDefinitionMap.put(beanName, beanDefinition);
-		} else {
-			//缓存中无对应的BeanDefinition，则直接注册
+		}
+		//todo：Map中无对应的BeanDefinition，则直接注册
+		else {
 			//如果beanDefinition已经被标记为创建
 			if (hasBeanCreationStarted()) {
 				// Cannot modify startup-time collection elements anymore (for stable iteration)
