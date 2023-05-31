@@ -994,17 +994,21 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 					//移除新注册的beanName
 					removeManualSingletonName(beanName);
 				}
-			} else {
-				// Still in startup registration phase
+			}
+			//仍处于启动注册阶段
+			else {
 				// 将beanDefinition信息维护至缓存
 				// beanDefinitionMap-->(key->beanName,value->beanDefinition)
 				this.beanDefinitionMap.put(beanName, beanDefinition);
+				// 将当前beanName放入beanDefinitionNames
 				this.beanDefinitionNames.add(beanName);
+				// 删除手动注册Bean集合中同名的beanName
 				removeManualSingletonName(beanName);
 			}
+			// 将存储冻结BeanDefinition的Map置为null
 			this.frozenBeanDefinitionNames = null;
 		}
-
+		//当前注册的BeanDefinition已在beanDefinitionMap中存在，或者其实例已在存储单例Bean的Map中存在
 		if (existingDefinition != null || containsSingleton(beanName)) {
 			//重置所有beanName对应的缓存
 			resetBeanDefinition(beanName);

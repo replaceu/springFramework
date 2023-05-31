@@ -18,58 +18,13 @@ package org.springframework.beans.factory.config;
 
 import org.springframework.beans.BeansException;
 
-/**
- * Factory hook that allows for custom modification of an application context's
- * bean definitions, adapting the bean property values of the context's underlying
- * bean factory.
- *
- * <p>Useful for custom config files targeted at system administrators that
- * override bean properties configured in the application context. See
- * {@link PropertyResourceConfigurer} and its concrete implementations for
- * out-of-the-box solutions that address such configuration needs.
- *
- * <p>A {@code BeanFactoryPostProcessor} may interact with and modify bean
- * definitions, but never bean instances. Doing so may cause premature bean
- * instantiation, violating the container and causing unintended side effects.
- * If bean instance interaction is required, consider implementing
- * {@link BeanPostProcessor} instead.
- *
- * <h3>Registration</h3>
- * <p>An {@code ApplicationContext} auto-detects {@code BeanFactoryPostProcessor}
- * beans in its bean definitions and applies them before any other beans get created.
- * A {@code BeanFactoryPostProcessor} may also be registered programmatically
- * with a {@code ConfigurableApplicationContext}.
- *
- * <h3>Ordering</h3>
- * <p>{@code BeanFactoryPostProcessor} beans that are autodetected in an
- * {@code ApplicationContext} will be ordered according to
- * {@link org.springframework.core.PriorityOrdered} and
- * {@link org.springframework.core.Ordered} semantics. In contrast,
- * {@code BeanFactoryPostProcessor} beans that are registered programmatically
- * with a {@code ConfigurableApplicationContext} will be applied in the order of
- * registration; any ordering semantics expressed through implementing the
- * {@code PriorityOrdered} or {@code Ordered} interface will be ignored for
- * programmatically registered post-processors. Furthermore, the
- * {@link org.springframework.core.annotation.Order @Order} annotation is not
- * taken into account for {@code BeanFactoryPostProcessor} beans.
- *
- * @author Juergen Hoeller
- * @author Sam Brannen
- * @since 06.07.2003
- * @see BeanPostProcessor
- * @see PropertyResourceConfigurer
- */
+//BeanFactoryPostProcessor是Bean工厂的后置处理器，一般用来修改上下文中的BeanDefinition，修改Bean的属性值
 @FunctionalInterface
 public interface BeanFactoryPostProcessor {
 
-	/**
-	 * Modify the application context's internal bean factory after its standard
-	 * initialization. All bean definitions will have been loaded, but no beans
-	 * will have been instantiated yet. This allows for overriding or adding
-	 * properties even to eager-initializing beans.
-	 * @param beanFactory the bean factory used by the application context
-	 * @throws org.springframework.beans.BeansException in case of errors
-	 */
+
+	// 入参是一个 Bean 工厂：ConfigurableListableBeanFactory。该方法执行时，所有BeanDefinition都已被加载，但还未实例化 Bean。
+	// 可以对其进行覆盖或添加属性，甚至可以用于初始化 Bean
 	void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException;
 
 }

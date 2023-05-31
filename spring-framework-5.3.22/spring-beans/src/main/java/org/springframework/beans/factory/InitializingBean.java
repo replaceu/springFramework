@@ -16,21 +16,8 @@
 
 package org.springframework.beans.factory;
 
-/**
- * Interface to be implemented by beans that need to react once all their properties
- * have been set by a {@link BeanFactory}: e.g. to perform custom initialization,
- * or merely to check that all mandatory properties have been set.
- *
- * <p>An alternative to implementing {@code InitializingBean} is specifying a custom
- * init method, for example in an XML bean definition. For a list of all bean
- * lifecycle methods, see the {@link BeanFactory BeanFactory javadocs}.
- *
- * @author Rod Johnson
- * @author Juergen Hoeller
- * @see DisposableBean
- * @see org.springframework.beans.factory.config.BeanDefinition#getPropertyValues()
- * @see org.springframework.beans.factory.support.AbstractBeanDefinition#getInitMethodName()
- */
+//InitializingBean 是一个可以在 Bean 的生命周期执行自定义操作的接口，
+// 凡是实现该接口的 Bean，在初始化阶段都可以执行自定义的操作
 public interface InitializingBean {
 
 	/**

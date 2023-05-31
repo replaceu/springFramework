@@ -21,50 +21,11 @@ import java.util.function.Predicate;
 import org.springframework.core.type.AnnotationMetadata;
 import org.springframework.lang.Nullable;
 
-/**
- * Interface to be implemented by types that determine which @{@link Configuration}
- * class(es) should be imported based on a given selection criteria, usually one or
- * more annotation attributes.
- *
- * <p>An {@link ImportSelector} may implement any of the following
- * {@link org.springframework.beans.factory.Aware Aware} interfaces,
- * and their respective methods will be called prior to {@link #selectImports}:
- * <ul>
- * <li>{@link org.springframework.context.EnvironmentAware EnvironmentAware}</li>
- * <li>{@link org.springframework.beans.factory.BeanFactoryAware BeanFactoryAware}</li>
- * <li>{@link org.springframework.beans.factory.BeanClassLoaderAware BeanClassLoaderAware}</li>
- * <li>{@link org.springframework.context.ResourceLoaderAware ResourceLoaderAware}</li>
- * </ul>
- *
- * <p>Alternatively, the class may provide a single constructor with one or more of
- * the following supported parameter types:
- * <ul>
- * <li>{@link org.springframework.core.env.Environment Environment}</li>
- * <li>{@link org.springframework.beans.factory.BeanFactory BeanFactory}</li>
- * <li>{@link java.lang.ClassLoader ClassLoader}</li>
- * <li>{@link org.springframework.core.io.ResourceLoader ResourceLoader}</li>
- * </ul>
- *
- * <p>{@code ImportSelector} implementations are usually processed in the same way
- * as regular {@code @Import} annotations, however, it is also possible to defer
- * selection of imports until all {@code @Configuration} classes have been processed
- * (see {@link DeferredImportSelector} for details).
- *
- * @author Chris Beams
- * @author Juergen Hoeller
- * @since 3.1
- * @see DeferredImportSelector
- * @see Import
- * @see ImportBeanDefinitionRegistrar
- * @see Configuration
- */
+//ImportSelector是一个较为重要的扩展接口，通过该接口可动态的返回需要被容器管理的类，不过一般用来返回外部的配置类。
+//可在标注 @Configuration注解的类中，通过@Import导入ImportSelector来使用
 public interface ImportSelector {
 
-	/**
-	 * Select and return the names of which class(es) should be imported based on
-	 * the {@link AnnotationMetadata} of the importing @{@link Configuration} class.
-	 * @return the class names, or an empty array if none
-	 */
+	//方法入参是注解的元数据对象，返回值是类的全路径名数组
 	String[] selectImports(AnnotationMetadata importingClassMetadata);
 
 	/**

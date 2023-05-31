@@ -21,43 +21,7 @@ import org.springframework.beans.factory.support.BeanDefinitionRegistryPostProce
 import org.springframework.beans.factory.support.BeanNameGenerator;
 import org.springframework.core.type.AnnotationMetadata;
 
-/**
- * Interface to be implemented by types that register additional bean definitions when
- * processing @{@link Configuration} classes. Useful when operating at the bean definition
- * level (as opposed to {@code @Bean} method/instance level) is desired or necessary.
- *
- * <p>Along with {@code @Configuration} and {@link ImportSelector}, classes of this type
- * may be provided to the @{@link Import} annotation (or may also be returned from an
- * {@code ImportSelector}).
- *
- * <p>An {@link ImportBeanDefinitionRegistrar} may implement any of the following
- * {@link org.springframework.beans.factory.Aware Aware} interfaces, and their respective
- * methods will be called prior to {@link #registerBeanDefinitions}:
- * <ul>
- * <li>{@link org.springframework.context.EnvironmentAware EnvironmentAware}</li>
- * <li>{@link org.springframework.beans.factory.BeanFactoryAware BeanFactoryAware}
- * <li>{@link org.springframework.beans.factory.BeanClassLoaderAware BeanClassLoaderAware}
- * <li>{@link org.springframework.context.ResourceLoaderAware ResourceLoaderAware}
- * </ul>
- *
- * <p>Alternatively, the class may provide a single constructor with one or more of
- * the following supported parameter types:
- * <ul>
- * <li>{@link org.springframework.core.env.Environment Environment}</li>
- * <li>{@link org.springframework.beans.factory.BeanFactory BeanFactory}</li>
- * <li>{@link java.lang.ClassLoader ClassLoader}</li>
- * <li>{@link org.springframework.core.io.ResourceLoader ResourceLoader}</li>
- * </ul>
- *
- * <p>See implementations and associated unit tests for usage examples.
- *
- * @author Chris Beams
- * @author Juergen Hoeller
- * @since 3.1
- * @see Import
- * @see ImportSelector
- * @see Configuration
- */
+//该接口和ImportSelector类似，也是配合@Import使用，不过ImportBeanDefinitionRegistrar更为直接一点，它可以直接把 Bean 注册到容器中
 public interface ImportBeanDefinitionRegistrar {
 
 	/**
