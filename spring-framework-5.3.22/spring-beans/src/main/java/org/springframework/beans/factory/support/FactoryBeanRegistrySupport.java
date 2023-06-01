@@ -46,7 +46,6 @@ public abstract class FactoryBeanRegistrySupport extends DefaultSingletonBeanReg
 	/** Cache of singleton objects created by FactoryBeans: FactoryBean name to object. */
 	private final Map<String, Object> factoryBeanObjectCache = new ConcurrentHashMap<>(16);
 
-
 	/**
 	 * Determine the type for the given FactoryBean.
 	 * @param factoryBean the FactoryBean instance to check
@@ -57,17 +56,13 @@ public abstract class FactoryBeanRegistrySupport extends DefaultSingletonBeanReg
 	protected Class<?> getTypeForFactoryBean(FactoryBean<?> factoryBean) {
 		try {
 			if (System.getSecurityManager() != null) {
-				return AccessController.doPrivileged(
-						(PrivilegedAction<Class<?>>) factoryBean::getObjectType, getAccessControlContext());
-			}
-			else {
+				return AccessController.doPrivileged((PrivilegedAction<Class<?>>) factoryBean::getObjectType, getAccessControlContext());
+			} else {
 				return factoryBean.getObjectType();
 			}
-		}
-		catch (Throwable ex) {
+		} catch (Throwable ex) {
 			// Thrown from the FactoryBean's getObjectType implementation.
-			logger.info("FactoryBean threw exception from getObjectType, despite the contract saying " +
-					"that it should return null if the type of its object cannot be determined yet", ex);
+			logger.info("FactoryBean threw exception from getObjectType, despite the contract saying " + "that it should return null if the type of its object cannot be determined yet", ex);
 			return null;
 		}
 	}
@@ -94,18 +89,22 @@ public abstract class FactoryBeanRegistrySupport extends DefaultSingletonBeanReg
 	 * @see org.springframework.beans.factory.FactoryBean#getObject()
 	 */
 	protected Object getObjectFromFactoryBean(FactoryBean<?> factory, String beanName, boolean shouldPostProcess) {
+		//如果是单例Bean
 		if (factory.isSingleton() && containsSingleton(beanName)) {
 			synchronized (getSingletonMutex()) {
+				// 尝试从缓存中获取，缓存中存储的是已经通过FactoryBean创建的bean
 				Object object = this.factoryBeanObjectCache.get(beanName);
 				if (object == null) {
+					//如果上一步没有得到对象，那么就通过FactoryBean创建真正的Bean
 					object = doGetObjectFromFactoryBean(factory, beanName);
-					// Only post-process and store if not put there already during getObject() call above
-					// (e.g. because of circular reference processing triggered by custom getBean calls)
+					//这里大概是在执行上一步doGetObjectFromFactoryBean方法过程中，该bean已被其它线程创建并缓存了起来
 					Object alreadyThere = this.factoryBeanObjectCache.get(beanName);
 					if (alreadyThere != null) {
 						object = alreadyThere;
 					}
+					//如果没有
 					else {
+						//Bean是否需要后置处理
 						if (shouldPostProcess) {
 							if (isSingletonCurrentlyInCreation(beanName)) {
 								// Temporarily return non-post-processed object, not storing it yet..
@@ -113,13 +112,11 @@ public abstract class FactoryBeanRegistrySupport extends DefaultSingletonBeanReg
 							}
 							beforeSingletonCreation(beanName);
 							try {
+								//执行后置处理器
 								object = postProcessObjectFromFactoryBean(object, beanName);
-							}
-							catch (Throwable ex) {
-								throw new BeanCreationException(beanName,
-										"Post-processing of FactoryBean's singleton object failed", ex);
-							}
-							finally {
+							} catch (Throwable ex) {
+								throw new BeanCreationException(beanName, "Post-processing of FactoryBean's singleton object failed", ex);
+							} finally {
 								afterSingletonCreation(beanName);
 							}
 						}
@@ -131,13 +128,15 @@ public abstract class FactoryBeanRegistrySupport extends DefaultSingletonBeanReg
 				return object;
 			}
 		}
+		//如果不是单例Bean
 		else {
+			//通过FactoryBean创建真正的Bean
 			Object object = doGetObjectFromFactoryBean(factory, beanName);
 			if (shouldPostProcess) {
 				try {
+					//执行后置处理器
 					object = postProcessObjectFromFactoryBean(object, beanName);
-				}
-				catch (Throwable ex) {
+				} catch (Throwable ex) {
 					throw new BeanCreationException(beanName, "Post-processing of FactoryBean's object failed", ex);
 				}
 			}
@@ -160,29 +159,23 @@ public abstract class FactoryBeanRegistrySupport extends DefaultSingletonBeanReg
 				AccessControlContext acc = getAccessControlContext();
 				try {
 					object = AccessController.doPrivileged((PrivilegedExceptionAction<Object>) factory::getObject, acc);
-				}
-				catch (PrivilegedActionException pae) {
+				} catch (PrivilegedActionException pae) {
 					throw pae.getException();
 				}
-			}
-			else {
+			} else {
+				//调用FacBean的getObject方法返回真正的Bean
 				object = factory.getObject();
 			}
-		}
-		catch (FactoryBeanNotInitializedException ex) {
+		} catch (FactoryBeanNotInitializedException ex) {
 			throw new BeanCurrentlyInCreationException(beanName, ex.toString());
-		}
-		catch (Throwable ex) {
+		} catch (Throwable ex) {
 			throw new BeanCreationException(beanName, "FactoryBean threw exception on object creation", ex);
 		}
 
 		// Do not accept a null value for a FactoryBean that's not fully
 		// initialized yet: Many FactoryBeans just return null then.
 		if (object == null) {
-			if (isSingletonCurrentlyInCreation(beanName)) {
-				throw new BeanCurrentlyInCreationException(
-						beanName, "FactoryBean which is currently in creation returned null from getObject");
-			}
+			if (isSingletonCurrentlyInCreation(beanName)) { throw new BeanCurrentlyInCreationException(beanName, "FactoryBean which is currently in creation returned null from getObject"); }
 			object = new NullBean();
 		}
 		return object;
@@ -210,10 +203,7 @@ public abstract class FactoryBeanRegistrySupport extends DefaultSingletonBeanReg
 	 * @throws BeansException if the given bean cannot be exposed as a FactoryBean
 	 */
 	protected FactoryBean<?> getFactoryBean(String beanName, Object beanInstance) throws BeansException {
-		if (!(beanInstance instanceof FactoryBean)) {
-			throw new BeanCreationException(beanName,
-					"Bean instance of type [" + beanInstance.getClass() + "] is not a FactoryBean");
-		}
+		if (!(beanInstance instanceof FactoryBean)) { throw new BeanCreationException(beanName, "Bean instance of type [" + beanInstance.getClass() + "] is not a FactoryBean"); }
 		return (FactoryBean<?>) beanInstance;
 	}
 

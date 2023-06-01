@@ -953,7 +953,7 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 			if (!isAllowBeanDefinitionOverriding()) {
 				throw new BeanDefinitionOverrideException(beanName, beanDefinition, existingDefinition);
 			}
-			/************************若允许覆盖************************************/
+			/**********************************若允许覆盖************************************/
 			//判断 Bean 的角色大小:
 			// 0：用户定义的 Bean，1：来源于配置文件的 Bean，2：Spring内部的 Bean；
 			// 当原 BeanDefinition角色小于新的 BeanDefinition角色时，输出一个 warn 日志，提示 BeanDefinition 被覆盖
