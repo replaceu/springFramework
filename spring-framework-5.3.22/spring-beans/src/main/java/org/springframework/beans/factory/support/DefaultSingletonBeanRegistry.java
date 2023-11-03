@@ -47,25 +47,25 @@ import org.springframework.util.StringUtils;
  * @see org.springframework.beans.factory.config.ConfigurableBeanFactory
  */
 
- //DefaultSingletonBeanRegistry是SingletonBeanRegistry的核心实现类，该类不仅实现了这些基础方法，还针对单例 Bean 扩展了许多功能，
- // 如：存储 Bean 之间的依赖关系、存储 Bean 的包含关系（外部类包含内部类）、
- // 获取 Bean 所处的状态（正在创建、创建完毕等）、回调销毁 Bean 时触发的 destroy 方法等
+ //DefaultSingletonBeanRegistry是SingletonBeanRegistry的核心实现类，该类不仅实现了这些基础方法，还针对单例Bean扩展了许多功能，
+ // 如：存储Bean之间的依赖关系、存储 Bean 的包含关系（外部类包含内部类）、
+ // 获取Bean所处的状态（正在创建、创建完毕等）、回调销毁Bean时触发的destroy方法等
 public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements SingletonBeanRegistry {
 
 	/** Maximum number of suppressed exceptions to preserve. */
 	private static final int SUPPRESSED_EXCEPTIONS_LIMIT = 100;
 
-	 // 缓存单例Bean实例，Key是beanName，Value是单例Bean实例
+	 //一级缓存，缓存单例Bean实例，Key是beanName，Value是单例Bean实例
 	private final Map<String, Object> singletonObjects = new ConcurrentHashMap<>(256);
 
 	 //缓存Bean对应的 ObjectFactory
-	 //ObjectFactory是获取Bean实例的工厂，只不过这里获取的Bean还未完全实例化，属于提早暴露的 Bean
+	 //ObjectFactory是获取Bean实例的工厂，只不过这里获取的Bean还未完全实例化，属于提早暴露的Bean
 	 //该属性在解决循环依赖时使用
+	 //三级缓存
 	private final Map<String, ObjectFactory<?>> singletonFactories = new HashMap<>(16);
-
-
 	 //缓存singletonFactories 属性中通过ObjectFactory创建的 Bean
 	 //该属性也是在解决循环依赖时使用
+	 //二级缓存
 	private final Map<String, Object> earlySingletonObjects = new ConcurrentHashMap<>(16);
 
 	 //保存已注册的单例Bean名称
@@ -112,23 +112,23 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 	}
 
 	/**
-	 * 缓存单例Bean实例
+	 * 缓存单例Bean实例，添加到一级缓存
 	 */
 	protected void addSingleton(String beanName, Object singletonObject) {
 		synchronized (this.singletonObjects) {
-			// 将单例Bean实例存放至singletonObjects集合
+			//将单例Bean实例存放至singletonObjects集合
 			this.singletonObjects.put(beanName, singletonObject);
-			// 当beanName对应的Bean实例已被存放至singletonObjects集合时，singletonFactories
-			// 和earlySingletonObjects集合则不能再持有beanName对应的ObjectFactory 和实例
+			//当beanName对应的Bean实例已被存放至singletonObjects集合时，singletonFactories
+			//和earlySingletonObjects集合则不能再持有beanName对应的ObjectFactory和实例
 			this.singletonFactories.remove(beanName);
 			this.earlySingletonObjects.remove(beanName);
-			//存储Bean名称
+			//放入已注册的单例池里
 			this.registeredSingletons.add(beanName);
 		}
 	}
 
 	/**
-	 * 缓存Bean对应的ObjectFactory
+	 * 缓存Bean对应的ObjectFactory，添加到三级缓存
 	 */
 	protected void addSingletonFactory(String beanName, ObjectFactory<?> singletonFactory) {
 		Assert.notNull(singletonFactory, "Singleton factory must not be null");
@@ -139,6 +139,7 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 				this.singletonFactories.put(beanName, singletonFactory);
 				//确保二级缓存没有此对象
 				this.earlySingletonObjects.remove(beanName);
+				//放入已注册的单例池里
 				this.registeredSingletons.add(beanName);
 			}
 		}
@@ -181,6 +182,7 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 								singletonObject = singletonFactory.getObject();
 								//放到二级缓存中
 								this.earlySingletonObjects.put(beanName, singletonObject);
+								//从三级缓存中移除
 								this.singletonFactories.remove(beanName);
 							}
 						}
@@ -361,13 +363,14 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 	}
 	 //保存具有依赖关系的Bean
 	public void registerDependentBean(String beanName, String dependentBeanName) {
+		//获取name的最终别名或者是全类名
 		String canonicalName = canonicalName(beanName);
-
+		//dependentBeanMap放的是beanName和这个beanName所有依赖的beanNames
 		synchronized (this.dependentBeanMap) {
 			Set<String> dependentBeans = this.dependentBeanMap.computeIfAbsent(canonicalName, k -> new LinkedHashSet<>(8));
 			if (!dependentBeans.add(dependentBeanName)) { return; }
 		}
-
+		//dependenciesForBeanMap放的是beanName和这个beanName所依赖的bean对象
 		synchronized (this.dependenciesForBeanMap) {
 			Set<String> dependenciesForBean = this.dependenciesForBeanMap.computeIfAbsent(dependentBeanName, k -> new LinkedHashSet<>(8));
 			dependenciesForBean.add(canonicalName);
